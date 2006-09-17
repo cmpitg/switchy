@@ -1,0 +1,46 @@
+--------------------  2006-04-17  Version 0.3 released  --------------------
+
+2006-04-17  Nigel Tao  <nigel.tao@myrealbox.com>
+
+	* Can drag and drop windows between workspaces.
+
+	* Shift-click and Shift-Control-click on a workspace's icon now works
+	  the same as Shift-Left/Right and Shift-Control-Left/Right (i.e., it
+	  moves one or all windows to a new workspace).
+
+	* New tooltips show the window's full title.
+
+	* Basic Xinerama support.  Super-Super (yes, hit both buttons) to
+	  move a window from one screen to the next.
+
+	* Minor cosmetic changes.
+
+	* Dependencies relaxed to gtk 2.6 and GNOME 2.10.
+
+
+
+--------------------  2006-01-22  Version 0.2 released  --------------------
+
+2006-01-22  Nigel Tao  <nigel.tao@myrealbox.com>
+
+	* Fixed crasher when opening "atypical" windows, such as clicking on the
+	  clock applet.
+	
+	* Active window is now highlighted a la menu items, rather than a plain
+	  ol' box.
+	
+	* Windows needing attention are in bold (consistent with the window list
+	  and window selector applets), and minimized windows are in italic.
+	
+	* Mouse scrolls now switch windows (and workspaces, if the mouse is over
+	  the mini-workspace column-header).
+	
+	* Super-Tab and Super-Enter now work when there is no window selected.
+
+
+
+--------------------  2006-01-01  Version 0.1 released  --------------------
+
+2006-01-01  Nigel Tao  <nigel.tao@myrealbox.com>
+
+	* Initial release.

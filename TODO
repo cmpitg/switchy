@@ -1,0 +1,29 @@
+Known Bugs:
+
+Zarro.
+
+------------------------------------
+
+Deal with pinned (aka sticky) windows.
+
+------------------------------------
+
+Drag-and-Drop...
+  ... to re-order workspaces (?) - this might need libwnck support (?), or we
+could just fake it like we do with "deleting" a specific workspace.
+
+  ... whilst DnD'ing an arbitrary object, can you start a drag, hit Super to
+switch to another window/workspace (after a one-second timeout, perhaps), and
+drop?  I can't seem to get Super to trigger whilst I'm dragging something like a
+folder in nautilus - does DnD swallow key events??
+
+------------------------------------
+
+Provide little thumbnails of windows, rather than their mini-icon.  This will
+probably be unusably slow without some of the more sexy X server extensions
+like Composite and Damage, and possibly also libcm (?) as in
+http://mail.gnome.org/archives/metacity-devel-list/2005-December/msg00002.html
+
+------------------------------------
+
+Updated on 2006-04-17 by Nigel Tao.

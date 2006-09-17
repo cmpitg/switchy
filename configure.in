@@ -1,0 +1,75 @@
+# Initial blurb
+AC_PREREQ(2.52)
+AC_INIT(superswitcher, 0.3,
+  http://browserbookapp.sourceforge.net/superswitcher/)
+AC_CONFIG_SRCDIR(src/superswitcher.c)
+AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+
+# Honor aclocal flags
+ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
+
+# Do the gettext/i18n stuff
+GETTEXT_PACKAGE=superswitcher
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",
+  [The name of the gettext package.])
+AC_SUBST(GETTEXT_PACKAGE)
+
+AM_MAINTAINER_MODE
+
+AC_ISC_POSIX
+AC_PROG_CC
+AM_PROG_CC_STDC
+AC_HEADER_STDC
+GNOME_COMPILE_WARNINGS(yes)
+
+AC_PROG_INTLTOOL([0.20])
+ALL_LINGUAS=""
+AM_GLIB_GNU_GETTEXT
+
+
+PKG_CHECK_MODULES(SUPERSWITCHER,
+  glib-2.0
+  gdk-2.0
+  gtk+-2.0 >= 2.6
+  libwnck-1.0 >= 2.10
+  x11)
+AC_SUBST(SUPERSWITCHER_CFLAGS)
+AC_SUBST(SUPERSWITCHER_LIBS)
+
+
+# Older XFree86s don't use pkg-config.  Yuck.
+AC_PATH_XTRA
+SUPERSWITCHER_CFLAGS="$SUPERSWITCHER_CFLAGS $X_CFLAGS"
+SUPERSWITCHER_LIBS="$SUPERSWITCHER_LIBS $X_LIBS"
+
+AC_CHECK_HEADER(X11/extensions/Xinerama.h,
+  echo "Building with Xinerama."
+  AC_DEFINE(HAVE_XINERAMA, , [If we have Xinerama])
+  SUPERSWITCHER_LIBS="$SUPERSWITCHER_LIBS -lXinerama"
+,
+  echo "Building without Xinerama."
+)
+
+
+# We would like to work on gtk+ 2.6 and libwnck 2.10.  This will need some
+# conditional compilation (i.e., #ifdef directives).
+if $PKG_CONFIG --atleast-version 2.8 gtk+-2.0; then
+  echo "Building with gtk+ >= 2.8."
+  AC_DEFINE(HAVE_GTK_2_8, , [If we have gtk+ 2.8])
+else
+  echo "Building without gtk+ >= 2.8."
+fi
+
+if $PKG_CONFIG --atleast-version 2.12 libwnck-1.0; then
+  echo "Building with libwnck >= 2.12."
+  AC_DEFINE(HAVE_WNCK_2_12, , [If we have libwnck 2.12])
+else
+  echo "Building without libwnck >= 2.12."
+fi
+
+
+AC_OUTPUT([
+  Makefile
+  src/Makefile
+  po/Makefile.in
+])
