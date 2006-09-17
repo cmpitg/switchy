@@ -272,7 +272,7 @@ _CSEOF
 echo "on `(hostname || uname -n) 2>/dev/null | sed 1q`" >&5
 echo >&5
 config_files=" Makefile src/Makefile po/Makefile.in"
-config_commands=" depfiles intltool default-1"
+config_commands=" depfiles intltool default-1 po/stamp-it"
 
 ac_cs_usage="\
 \`$as_me' instantiates files from templates according to the
@@ -386,10 +386,11 @@ fi
 #
 
 AMDEP_TRUE="" ac_aux_dir="."
-INTLTOOL_PERL='/usr/bin/perl' ac_aux_dir=.
-INTLTOOL_EXTRACT='$(top_builddir)/intltool-extract' ICONV='/usr/bin/iconv'
-MSGFMT='/usr/bin/msgfmt' MSGMERGE='/usr/bin/msgmerge'
-XGETTEXT='/usr/bin/xgettext'
+INTLTOOL_PERL='/usr/bin/perl' ac_aux_dir='.'
+prefix="/usr" exec_prefix="${prefix}" INTLTOOL_LIBDIR="${exec_prefix}/lib"
+INTLTOOL_EXTRACT='$(top_builddir)/intltool-extract' INTLTOOL_ICONV='/usr/bin/iconv'
+INTLTOOL_MSGFMT='/usr/bin/msgfmt' INTLTOOL_MSGMERGE='/usr/bin/msgmerge'
+INTLTOOL_XGETTEXT='/usr/bin/xgettext'
 
 
 for ac_config_target in $ac_config_targets
@@ -402,6 +403,7 @@ do
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "intltool" ) CONFIG_COMMANDS="$CONFIG_COMMANDS intltool" ;;
   "default-1" ) CONFIG_COMMANDS="$CONFIG_COMMANDS default-1" ;;
+  "po/stamp-it" ) CONFIG_COMMANDS="$CONFIG_COMMANDS po/stamp-it" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
@@ -489,19 +491,22 @@ s,@INSTALL_DATA@,${INSTALL} -m 644,;t t
 s,@CYGPATH_W@,echo,;t t
 s,@PACKAGE@,superswitcher,;t t
 s,@VERSION@,0.3,;t t
-s,@ACLOCAL@,${SHELL} /home/nasty/devel/superswitcher-0.3/missing --run aclocal-1.7 ,;t t
-s,@AUTOCONF@,${SHELL} /home/nasty/devel/superswitcher-0.3/missing --run autoconf,;t t
-s,@AUTOMAKE@,${SHELL} /home/nasty/devel/superswitcher-0.3/missing --run automake-1.7,;t t
-s,@AUTOHEADER@,${SHELL} /home/nasty/devel/superswitcher-0.3/missing --run autoheader,;t t
-s,@MAKEINFO@,${SHELL} /home/nasty/devel/superswitcher-0.3/missing --run makeinfo,;t t
-s,@AMTAR@,${SHELL} /home/nasty/devel/superswitcher-0.3/missing --run tar,;t t
-s,@install_sh@,/home/nasty/devel/superswitcher-0.3/install-sh,;t t
+s,@ACLOCAL@,${SHELL} /home/nasty/devel/superswitcher-svn/missing --run aclocal-1.9 ,;t t
+s,@AUTOCONF@,${SHELL} /home/nasty/devel/superswitcher-svn/missing --run autoconf,;t t
+s,@AUTOMAKE@,${SHELL} /home/nasty/devel/superswitcher-svn/missing --run automake-1.9,;t t
+s,@AUTOHEADER@,${SHELL} /home/nasty/devel/superswitcher-svn/missing --run autoheader,;t t
+s,@MAKEINFO@,${SHELL} /home/nasty/devel/superswitcher-svn/missing --run makeinfo,;t t
+s,@install_sh@,/home/nasty/devel/superswitcher-svn/install-sh,;t t
 s,@STRIP@,,;t t
 s,@ac_ct_STRIP@,,;t t
 s,@INSTALL_STRIP_PROGRAM@,${SHELL} $(install_sh) -c -s,;t t
+s,@mkdir_p@,mkdir -p --,;t t
 s,@AWK@,mawk,;t t
 s,@SET_MAKE@,,;t t
 s,@am__leading_dot@,.,;t t
+s,@AMTAR@,${SHELL} /home/nasty/devel/superswitcher-svn/missing --run tar,;t t
+s,@am__tar@,${AMTAR} chof - "$$tardir",;t t
+s,@am__untar@,${AMTAR} xf -,;t t
 s,@GETTEXT_PACKAGE@,superswitcher,;t t
 s,@MAINTAINER_MODE_TRUE@,,;t t
 s,@MAINTAINER_MODE_FALSE@,#,;t t
@@ -542,6 +547,7 @@ s,@INTLTOOL_XML_NOMERGE_RULE@,%.xml:       %.xml.in       $(INTLTOOL_MERGE) ; LC
 s,@INTLTOOL_CAVES_RULE@,%.caves:     %.caves.in     $(INTLTOOL_MERGE) $(wildcard $(top_srcdir)/po/*.po) ; LC_ALL=C $(INTLTOOL_MERGE) -d -u -c $(top_builddir)/po/.intltool-merge-cache $(top_srcdir)/po $< $@,;t t
 s,@INTLTOOL_SCHEMAS_RULE@,%.schemas:   %.schemas.in   $(INTLTOOL_MERGE) $(wildcard $(top_srcdir)/po/*.po) ; LC_ALL=C $(INTLTOOL_MERGE) -s -u -c $(top_builddir)/po/.intltool-merge-cache $(top_srcdir)/po $< $@,;t t
 s,@INTLTOOL_THEME_RULE@,%.theme:     %.theme.in     $(INTLTOOL_MERGE) $(wildcard $(top_srcdir)/po/*.po) ; LC_ALL=C $(INTLTOOL_MERGE) -d -u -c $(top_builddir)/po/.intltool-merge-cache $(top_srcdir)/po $< $@,;t t
+s,@INTLTOOL_SERVICE_RULE@,%.service: %.service.in   $(INTLTOOL_MERGE) $(wildcard $(top_srcdir)/po/*.po) ; LC_ALL=C $(INTLTOOL_MERGE) -d -u -c $(top_builddir)/po/.intltool-merge-cache $(top_srcdir)/po $< $@,;t t
 s,@INTLTOOL_EXTRACT@,$(top_builddir)/intltool-extract,;t t
 s,@INTLTOOL_MERGE@,$(top_builddir)/intltool-merge,;t t
 s,@INTLTOOL_UPDATE@,$(top_builddir)/intltool-update,;t t
@@ -550,6 +556,7 @@ s,@INTLTOOL_ICONV@,/usr/bin/iconv,;t t
 s,@INTLTOOL_MSGFMT@,/usr/bin/msgfmt,;t t
 s,@INTLTOOL_MSGMERGE@,/usr/bin/msgmerge,;t t
 s,@INTLTOOL_XGETTEXT@,/usr/bin/xgettext,;t t
+s,@ALL_LINGUAS@,,;t t
 s,@USE_NLS@,yes,;t t
 s,@MSGFMT@,/usr/bin/msgfmt,;t t
 s,@GMSGFMT@,/usr/bin/msgfmt,;t t
@@ -568,7 +575,7 @@ s,@MKINSTALLDIRS@,./mkinstalldirs,;t t
 s,@PKG_CONFIG@,/usr/bin/pkg-config,;t t
 s,@ac_pt_PKG_CONFIG@,/usr/bin/pkg-config,;t t
 s,@SUPERSWITCHER_CFLAGS@,-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/gtk-2.0 -I/usr/lib/gtk-2.0/include -I/usr/include/pango-1.0 -I/usr/include/cairo -I/usr/include/atk-1.0 -I/usr/include/libwnck-1.0   ,;t t
-s,@SUPERSWITCHER_LIBS@,-lwnck-1 -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lfontconfig -lXinerama -lXi -lXrandr -lXext -lXcursor -lXfixes -lpango-1.0 -lcairo -lXrender -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lX11 -ldl    -L/usr/X11R6/lib -lXinerama,;t t
+s,@SUPERSWITCHER_LIBS@,-lwnck-1 -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lfontconfig -lXext -lXrender -lXinerama -lXi -lXrandr -lXcursor -lXfixes -lpango-1.0 -lcairo -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0 -lX11    -L/usr/X11R6/lib -lXinerama,;t t
 s,@X_CFLAGS@,,;t t
 s,@X_PRE_LIBS@, -lSM -lICE,;t t
 s,@X_LIBS@, -L/usr/X11R6/lib,;t t
@@ -949,27 +956,21 @@ echo X"$mf" |
   else
     continue
   fi
-  grep '^DEP_FILES *= *[^ #]' < "$mf" > /dev/null || continue
-  # Extract the definition of DEP_FILES from the Makefile without
-  # running `make'.
-  DEPDIR=`sed -n -e '/^DEPDIR = / s///p' < "$mf"`
+  # Extract the definition of DEPDIR, am__include, and am__quote
+  # from the Makefile without running `make'.
+  DEPDIR=`sed -n 's/^DEPDIR = //p' < "$mf"`
   test -z "$DEPDIR" && continue
+  am__include=`sed -n 's/^am__include = //p' < "$mf"`
+  test -z "am__include" && continue
+  am__quote=`sed -n 's/^am__quote = //p' < "$mf"`
   # When using ansi2knr, U may be empty or an underscore; expand it
-  U=`sed -n -e '/^U = / s///p' < "$mf"`
-  test -d "$dirpart/$DEPDIR" || mkdir "$dirpart/$DEPDIR"
-  # We invoke sed twice because it is the simplest approach to
-  # changing $(DEPDIR) to its actual value in the expansion.
-  for file in `sed -n -e '
-    /^DEP_FILES = .*\\\\$/ {
-      s/^DEP_FILES = //
-      :loop
-	s/\\\\$//
-	p
-	n
-	/\\\\$/ b loop
-      p
-    }
-    /^DEP_FILES = / s/^DEP_FILES = //p' < "$mf" | \
+  U=`sed -n 's/^U = //p' < "$mf"`
+  # Find all dependency output files, they are included files with
+  # $(DEPDIR) in their names.  We invoke sed twice because it is the
+  # simplest approach to changing $(DEPDIR) to its actual value in the
+  # expansion.
+  for file in `sed -n "
+    s/^$am__include $am__quote\(.*(DEPDIR).*\)$am__quote"'$/\1/p' <"$mf" | \
        sed -e 's/\$(DEPDIR)/'"$DEPDIR"'/g' -e 's/\$U/'"$U"'/g'`; do
     # Make sure the directory exists.
     test -f "$dirpart/$file" && continue
@@ -1017,47 +1018,51 @@ done
  ;;
     intltool )
 
-intltool_edit="-e 's#@INTLTOOL_EXTRACT@#`pwd`/intltool-extract#g' \
-               -e 's#@INTLTOOL_ICONV@#${INTLTOOL_ICONV}#g' \
-               -e 's#@INTLTOOL_MSGFMT@#${INTLTOOL_MSGFMT}#g' \
-               -e 's#@INTLTOOL_MSGMERGE@#${INTLTOOL_MSGMERGE}#g' \
-               -e 's#@INTLTOOL_XGETTEXT@#${INTLTOOL_XGETTEXT}#g' \
-               -e 's#@INTLTOOL_PERL@#${INTLTOOL_PERL}#g'"
-
-eval sed ${intltool_edit} < ${ac_aux_dir}/intltool-extract.in \
-  > intltool-extract.out
-if cmp -s intltool-extract intltool-extract.out 2>/dev/null; then
-  rm -f intltool-extract.out
-else
-  mv -f intltool-extract.out intltool-extract
-fi
-chmod ugo+x intltool-extract
-chmod u+w intltool-extract
-
-eval sed ${intltool_edit} < ${ac_aux_dir}/intltool-merge.in \
-  > intltool-merge.out
-if cmp -s intltool-merge intltool-merge.out 2>/dev/null; then
-  rm -f intltool-merge.out
-else
-  mv -f intltool-merge.out intltool-merge
-fi
-chmod ugo+x intltool-merge
-chmod u+w intltool-merge
-
-eval sed ${intltool_edit} < ${ac_aux_dir}/intltool-update.in \
-  > intltool-update.out
-if cmp -s intltool-update intltool-update.out 2>/dev/null; then
-  rm -f intltool-update.out
-else
-  mv -f intltool-update.out intltool-update
-fi
-chmod ugo+x intltool-update
-chmod u+w intltool-update
+for file in intltool-extract intltool-merge intltool-update; do
+  sed -e "s|@INTLTOOL_EXTRACT@|`pwd`/intltool-extract|g" \
+      -e "s|@INTLTOOL_LIBDIR@|${INTLTOOL_LIBDIR}|g" \
+      -e "s|@INTLTOOL_ICONV@|${INTLTOOL_ICONV}|g" \
+      -e "s|@INTLTOOL_MSGFMT@|${INTLTOOL_MSGFMT}|g" \
+      -e "s|@INTLTOOL_MSGMERGE@|${INTLTOOL_MSGMERGE}|g" \
+      -e "s|@INTLTOOL_XGETTEXT@|${INTLTOOL_XGETTEXT}|g" \
+      -e "s|@INTLTOOL_PERL@|${INTLTOOL_PERL}|g" \
+	< ${ac_aux_dir}/${file}.in > ${file}.out
+  if cmp -s ${file} ${file}.out 2>/dev/null; then
+    rm -f ${file}.out
+  else
+    mv -f ${file}.out ${file}
+  fi
+  chmod ugo+x ${file}
+  chmod u+w ${file}
+done
 
  ;;
     default-1 ) case "$CONFIG_FILES" in *po/Makefile.in*)
         sed -e "/POTFILES =/r po/POTFILES" po/Makefile.in > po/Makefile
       esac ;;
+    po/stamp-it )
+    rm -f "po/stamp-it" "po/stamp-it.tmp" "po/POTFILES" "po/Makefile.tmp"
+    >"po/stamp-it.tmp"
+    sed '/^#/d
+	 s/^[[].*] *//
+	 /^[ 	]*$/d
+	'"s|^|	$ac_top_srcdir/|" \
+      "$srcdir/po/POTFILES.in" | sed '$!s/$/ \\/' >"po/POTFILES"
+
+    if test ! -f "po/Makefile"; then
+      { { echo "$as_me:$LINENO: error: po/Makefile is not ready." >&5
+echo "$as_me: error: po/Makefile is not ready." >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    mv "po/Makefile" "po/Makefile.tmp"
+    sed '/^POTFILES =/,/[^\\]$/ {
+		/^POTFILES =/!d
+		r po/POTFILES
+	  }
+	 ' "po/Makefile.tmp" >"po/Makefile"
+    rm -f "po/Makefile.tmp"
+    mv "po/stamp-it.tmp" "po/stamp-it"
+   ;;
   esac
 done
 

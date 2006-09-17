@@ -1,3 +1,20 @@
+2006-09-17  Nigel Tao  <nigeltao@gnome.org>  revision 3
+
+	* Added svn:ignore properties.
+	* Some generated files seem to have changed after an ./autogen.sh
+	  refresh.
+
+
+2006-09-17  Nigel Tao  <nigeltao@gnome.org> (note the new e-mail address)
+Version 0.3 was uploaded into the subversion repository (*) as revision 2 (the
+empty tree is revision 1).
+
+(*) http://code.google.com/p/superswitcher/source
+Use this command to anonymously check out the latest project source code:
+svn checkout http://superswitcher.googlecode.com/svn/trunk/ superswitcher
+
+The older ChangeLog remains below.
+
 --------------------  2006-04-17  Version 0.3 released  --------------------
 
 2006-04-17  Nigel Tao  <nigel.tao@myrealbox.com>
