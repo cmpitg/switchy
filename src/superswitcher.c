@@ -59,7 +59,7 @@ grab (Display *x_display, GdkWindow *gdk_window, int keyval)
 {
   XGrabKey (x_display,
             XKeysymToKeycode (x_display, keyval),
-            0,
+            AnyModifier,
             GDK_WINDOW_XWINDOW (gdk_window),
             False,
             GrabModeAsync,
@@ -84,7 +84,7 @@ main (int argc, char **argv)
 
   screen = ss_screen_new (wnck_screen_get_default (), x_display);
 
-printf ("-------\nSuperSwitcher version 0.3\n"); // TODO: DELETE ME
+printf ("-------\nSuperSwitcher version 0.4\n"); // TODO: DELETE ME
   gtk_main ();
   return 0;
 }

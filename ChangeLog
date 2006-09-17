@@ -1,3 +1,11 @@
+2006-09-17  Nigel Tao  <nigeltao@gnome.org>  revision 4
+
+	* Now works when NumLock is on.  Fixes bug #1.
+	  http://code.google.com/p/superswitcher/issues/detail?id=1
+
+	* Version bump to 0.4.
+
+
 2006-09-17  Nigel Tao  <nigeltao@gnome.org>  revision 3
 
 	* Added svn:ignore properties.
