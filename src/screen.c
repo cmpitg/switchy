@@ -6,6 +6,10 @@
 #include <libwnck/libwnck.h>
 #include "string.h"
 
+#ifdef HAVE_GCONF
+#include <gconf/gconf-client.h>
+#endif
+
 #include "draganddrop.h"
 #include "window.h"
 #include "workspace.h"
@@ -28,6 +32,11 @@ static guint window_closed_signal;
 static guint window_opened_signal;
 static guint workspace_created_signal;
 static guint workspace_destroyed_signal;
+
+#ifdef HAVE_GCONF
+static GConfClient *gconf_client = NULL;
+static guint gconf_focus_mode_notify_id = 0;
+#endif
 
 //------------------------------------------------------------------------------
 
@@ -172,6 +181,59 @@ ss_screen_update_search (SSScreen *screen, const char *query)
 
 //------------------------------------------------------------------------------
 
+static SSWindow *
+get_ss_window_from_wnck_window (SSScreen *screen, WnckWindow *wnck_window)
+{
+  gulong xid;
+  SSWorkspace *workspace;
+  SSWindow *window;
+  GList *i;
+  GList *j;
+
+  if (wnck_window == NULL) {
+    return NULL;
+  }
+
+  xid = wnck_window_get_xid (wnck_window);
+
+  // Walk through the list of list of windows, matching by X ID.
+  for (i = screen->workspaces; i; i = i->next) {
+    workspace = (SSWorkspace *) i->data;
+    for (j = workspace->windows; j; j = j->next) {
+      window = (SSWindow *) j->data;
+      if (xid == wnck_window_get_xid (window->wnck_window)) {
+        return window;
+      }
+    }
+  }
+
+  return NULL;
+}
+
+//------------------------------------------------------------------------------
+
+static SSWorkspace *
+get_ss_workspace_from_wnck_workspace (SSScreen *screen, WnckWorkspace *wnck_workspace)
+{
+  SSWorkspace *workspace;
+  GList *i;
+
+  if (wnck_workspace == NULL) {
+    return NULL;
+  }
+
+  for (i = screen->workspaces; i; i = i->next) {
+    workspace = (SSWorkspace *) i->data;
+    if (wnck_workspace == workspace->wnck_workspace) {
+      return workspace;
+    }
+  }
+
+  return NULL;
+}
+
+//------------------------------------------------------------------------------
+
 void
 ss_screen_activate_next_window (SSScreen *screen, gboolean backwards, guint32 time)
 {
@@ -186,11 +248,14 @@ ss_screen_activate_next_window (SSScreen *screen, gboolean backwards, guint32 ti
   gboolean should_activate_next_sensitive_window;
   gboolean found_active_window;
 
+  gboolean also_warp_pointer_if_necessary;
+
   first_sensitive_window    = NULL;
   previous_sensitive_window = NULL;
   should_activate_last_sensitive_window = FALSE;
   should_activate_next_sensitive_window = FALSE;
   found_active_window = FALSE;
+  also_warp_pointer_if_necessary = TRUE;
 
   for (i = screen->workspaces; i; i = i->next) {
     workspace = (SSWorkspace *) i->data;
@@ -199,7 +264,8 @@ ss_screen_activate_next_window (SSScreen *screen, gboolean backwards, guint32 ti
         if (previous_sensitive_window == NULL) {
           should_activate_last_sensitive_window = TRUE;
         } else {
-          ss_window_activate_workspace_and_window (previous_sensitive_window, time);
+          ss_window_activate_workspace_and_window (previous_sensitive_window, time,
+            also_warp_pointer_if_necessary);
           return;
         }
       } else {
@@ -217,14 +283,16 @@ ss_screen_activate_next_window (SSScreen *screen, gboolean backwards, guint32 ti
         if (previous_sensitive_window == NULL) {
           should_activate_last_sensitive_window = TRUE;
         } else {
-          ss_window_activate_workspace_and_window (previous_sensitive_window, time);
+          ss_window_activate_workspace_and_window (previous_sensitive_window, time,
+            also_warp_pointer_if_necessary);
           return;
         }
       }
 
       if (window->sensitive) {
         if (should_activate_next_sensitive_window) {
-          ss_window_activate_workspace_and_window (window, time);
+          ss_window_activate_workspace_and_window (window, time,
+            also_warp_pointer_if_necessary);
           return;
         }
 
@@ -242,12 +310,14 @@ ss_screen_activate_next_window (SSScreen *screen, gboolean backwards, guint32 ti
   }
 
   if (should_activate_next_sensitive_window) {
-    ss_window_activate_workspace_and_window (first_sensitive_window, time);
+    ss_window_activate_workspace_and_window (first_sensitive_window, time,
+      also_warp_pointer_if_necessary);
     return;
   }
 
   if (should_activate_last_sensitive_window) {
-    ss_window_activate_workspace_and_window (previous_sensitive_window, time);
+    ss_window_activate_workspace_and_window (previous_sensitive_window, time,
+      also_warp_pointer_if_necessary);
     return;
   }
 }
@@ -269,6 +339,9 @@ ss_screen_activate_next_window_in_stacking_order (SSScreen *screen, gboolean bac
   WnckWindow *previous_eligible_wnck_window;
   gboolean should_activate_last_eligible_wnck_window;
   gboolean should_activate_next_eligible_wnck_window;
+  
+  gboolean also_warp_pointer_if_necessary;
+  also_warp_pointer_if_necessary = TRUE;
 
   num_windows = g_list_length (screen->active_workspace->windows);
   if (num_windows == 0) {
@@ -320,13 +393,16 @@ ss_screen_activate_next_window_in_stacking_order (SSScreen *screen, gboolean bac
       if (previous_eligible_wnck_window == NULL) {
         should_activate_last_eligible_wnck_window = TRUE;
       } else {
-        wnck_window_activate (previous_eligible_wnck_window, time);
+        ss_window_activate_window (get_ss_window_from_wnck_window (
+          screen, previous_eligible_wnck_window), time,
+          also_warp_pointer_if_necessary);
         return;
       }
     }
 
     if (should_activate_next_eligible_wnck_window) {
-      wnck_window_activate (wnck_window, time);
+      ss_window_activate_window (get_ss_window_from_wnck_window (
+        screen, wnck_window), time, also_warp_pointer_if_necessary);
       return;
     }
 
@@ -351,67 +427,16 @@ ss_screen_activate_next_window_in_stacking_order (SSScreen *screen, gboolean bac
   }
 
   if (should_activate_next_eligible_wnck_window) {
-    wnck_window_activate (first_eligible_wnck_window, time);
+    ss_window_activate_window (get_ss_window_from_wnck_window (
+      screen, first_eligible_wnck_window), time, also_warp_pointer_if_necessary);
     return;
   }
 
   if (should_activate_last_eligible_wnck_window) {
-    wnck_window_activate (previous_eligible_wnck_window, time);
+    ss_window_activate_window (get_ss_window_from_wnck_window (
+      screen, previous_eligible_wnck_window), time, also_warp_pointer_if_necessary);
     return;
   }
-}
-
-//------------------------------------------------------------------------------
-
-static SSWindow *
-get_ss_window_from_wnck_window (SSScreen *screen, WnckWindow *wnck_window)
-{
-  gulong xid;
-  SSWorkspace *workspace;
-  SSWindow *window;
-  GList *i;
-  GList *j;
-
-  if (wnck_window == NULL) {
-    return NULL;
-  }
-
-  xid = wnck_window_get_xid (wnck_window);
-
-  // Walk through the list of list of windows, matching by X ID.
-  for (i = screen->workspaces; i; i = i->next) {
-    workspace = (SSWorkspace *) i->data;
-    for (j = workspace->windows; j; j = j->next) {
-      window = (SSWindow *) j->data;
-      if (xid == wnck_window_get_xid (window->wnck_window)) {
-        return window;
-      }
-    }
-  }
-
-  return NULL;
-}
-
-//------------------------------------------------------------------------------
-
-static SSWorkspace *
-get_ss_workspace_from_wnck_workspace (SSScreen *screen, WnckWorkspace *wnck_workspace)
-{
-  SSWorkspace *workspace;
-  GList *i;
-
-  if (wnck_workspace == NULL) {
-    return NULL;
-  }
-
-  for (i = screen->workspaces; i; i = i->next) {
-    workspace = (SSWorkspace *) i->data;
-    if (wnck_workspace == workspace->wnck_workspace) {
-      return workspace;
-    }
-  }
-
-  return NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -714,6 +739,50 @@ on_workspace_destroyed (WnckScreen *wnck_screen, WnckWorkspace *wnck_workspace, 
 
 //------------------------------------------------------------------------------
 
+#ifdef HAVE_GCONF
+static void
+on_focus_mode_change (GConfClient *client, guint cn_id, GConfEntry *entry, gpointer data)
+{
+  SSScreen *screen;
+  GConfValue *value;
+  const char *s;
+
+  screen = (SSScreen *) data;
+  value = gconf_entry_get_value (entry);
+  if (value && (value->type == GCONF_VALUE_STRING)) {
+    s = gconf_value_get_string (value);
+    screen->pointer_needs_recentering_on_focus_change =
+      (g_ascii_strcasecmp (s, "sloppy") == 0)  ||
+      (g_ascii_strcasecmp (s, "mouse") == 0);
+  }
+}
+#endif
+
+//------------------------------------------------------------------------------
+
+#ifdef HAVE_GCONF
+static void
+load_from_gconf (SSScreen *screen)
+{
+  char *s;
+  if (gconf_client != NULL) {
+    return;
+  }
+
+  gconf_client = gconf_client_get_default ();
+  gconf_client_add_dir (gconf_client, "/apps/metacity", GCONF_CLIENT_PRELOAD_NONE, NULL);
+  gconf_focus_mode_notify_id = gconf_client_notify_add (gconf_client,
+    "/apps/metacity/general/focus_mode", on_focus_mode_change, screen, NULL, NULL);
+  s = gconf_client_get_string (gconf_client, "/apps/metacity/general/focus_mode", NULL);
+  screen->pointer_needs_recentering_on_focus_change =
+    (g_ascii_strcasecmp (s, "sloppy") == 0)  ||
+    (g_ascii_strcasecmp (s, "mouse") == 0);
+  g_free (s);
+}
+#endif
+
+//------------------------------------------------------------------------------
+
 static void
 ss_screen_class_init (SSScreenClass *klass)
 {
@@ -800,7 +869,7 @@ ss_screen_get_type (void)
 //------------------------------------------------------------------------------
 
 SSScreen *
-ss_screen_new (WnckScreen *wnck_screen, Display *x_display)
+ss_screen_new (WnckScreen *wnck_screen, Display *x_display, Window x_root_window)
 {
   SSScreen *screen;
 
@@ -811,7 +880,7 @@ ss_screen_new (WnckScreen *wnck_screen, Display *x_display)
 
   screen = (SSScreen *) g_object_new (SS_TYPE_SCREEN, NULL);
   screen->wnck_screen = wnck_screen;
-  screen->xinerama = ss_xinerama_new (x_display);
+  screen->xinerama = ss_xinerama_new (x_display, x_root_window);
   screen->screen_width  = wnck_screen_get_width (wnck_screen);
   screen->screen_height = wnck_screen_get_height (wnck_screen);
   screen->screen_aspect = (double) screen->screen_height / (double) screen->screen_width;
@@ -838,6 +907,11 @@ ss_screen_new (WnckScreen *wnck_screen, Display *x_display)
   update_window_label_width (screen);
 
   screen->tooltips = gtk_tooltips_new ();
+
+  screen->pointer_needs_recentering_on_focus_change = FALSE;
+#ifdef HAVE_GCONF
+  load_from_gconf (screen);
+#endif
 
   // Add existing workspaces, and then existing windows
   screen->workspaces = NULL;

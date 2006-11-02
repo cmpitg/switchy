@@ -16,7 +16,7 @@
 //------------------------------------------------------------------------------
 
 SSXinerama *
-ss_xinerama_new (Display *x_display)
+ss_xinerama_new (Display *x_display, Window x_root_window)
 {
   int num_screens;
   int minimum_width;
@@ -65,6 +65,7 @@ ss_xinerama_new (Display *x_display)
 
   xinerama = g_new (SSXinerama, 1);
   xinerama->x_display = x_display;
+  xinerama->x_root_window = x_root_window;
   xinerama->num_screens = num_screens;
   xinerama->screens = screens;
   xinerama->minimum_width = minimum_width;

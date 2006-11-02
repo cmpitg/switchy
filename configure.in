@@ -50,6 +50,19 @@ AC_CHECK_HEADER(X11/extensions/Xinerama.h,
 )
 
 
+# We use gconf to look at metacity's focus-follows-mouse prefs.  It is optional
+# because we might want to use superswitcher in a non-GNOME environment
+# (metacity and gconf are GNOME specific).
+if $PKG_CONFIG --exists gconf-2.0; then
+  echo "Building with gconf."
+  SUPERSWITCHER_CFLAGS="$SUPERSWITCHER_CFLAGS `$PKG_CONFIG --cflags gconf-2.0`"
+  SUPERSWITCHER_LIBS="$SUPERSWITCHER_LIBS `$PKG_CONFIG --libs gconf-2.0`"
+  AC_DEFINE(HAVE_GCONF, , [If we have gconf])
+else
+  echo "Building without gconf."
+fi
+
+
 # We would like to work on gtk+ 2.6 and libwnck 2.10.  This will need some
 # conditional compilation (i.e., #ifdef directives).
 if $PKG_CONFIG --atleast-version 2.8 gtk+-2.0; then
@@ -66,6 +79,9 @@ else
   echo "Building without libwnck >= 2.12."
 fi
 
+
+# Blank line to separate the conditional "Building with[out] ..." messages.
+echo
 
 AC_OUTPUT([
   Makefile

@@ -6,6 +6,7 @@
 #include "draganddrop.h"
 #include "screen.h"
 #include "workspace.h"
+#include "xinerama.h"
 
 //------------------------------------------------------------------------------
 
@@ -72,14 +73,38 @@ ss_window_set_sensitive (SSWindow *window, gboolean sensitive)
 //------------------------------------------------------------------------------
 
 void
-ss_window_activate_workspace_and_window (SSWindow *window, guint32 time)
+ss_window_activate_workspace_and_window (SSWindow *window, guint32 time,
+                                         gboolean also_warp_pointer_if_necessary)
 {
   if (window == NULL) {
     return;
   }
 
   wnck_workspace_activate (window->workspace->wnck_workspace, time);
-  wnck_window_activate (window->wnck_window, time + 1);
+  ss_window_activate_window (window, time + 1, also_warp_pointer_if_necessary);
+}
+
+//------------------------------------------------------------------------------
+
+void
+ss_window_activate_window (SSWindow *window, guint32 time,
+                           gboolean also_warp_pointer_if_necessary)
+{
+  GdkRectangle r;
+  if (window == NULL) {
+    return;
+  }
+
+  wnck_window_activate (window->wnck_window, time);
+  if (also_warp_pointer_if_necessary &&
+      window->workspace->screen->pointer_needs_recentering_on_focus_change) {
+    wnck_window_get_geometry (window->wnck_window, &r.x, &r.y, &r.width, &r.height);
+    XWarpPointer (window->workspace->screen->xinerama->x_display,
+                  None,
+                  window->workspace->screen->xinerama->x_root_window,
+                  0, 0, 0, 0, 
+                  r.x + (r.width / 2), r.y + (r.height / 2));
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -142,12 +167,12 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
           dnd->drag_start_window,
           dnd->new_window_index);
       }
-      wnck_window_activate (wnck_window, event->time);
+      ss_window_activate_window (window, event->time, FALSE);
     }
     ss_draganddrop_on_release (dnd);
   } else {
     window->new_window_index = -1;
-    ss_window_activate_workspace_and_window (window, event->time);
+    ss_window_activate_workspace_and_window (window, event->time, FALSE);
   }
   return TRUE;
 }

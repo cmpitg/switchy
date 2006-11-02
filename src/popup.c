@@ -17,7 +17,8 @@
 //------------------------------------------------------------------------------
 
 static void
-action_change_active_window_by_delta (Popup *popup, int delta, gboolean also_bring_active_window, guint32 time)
+action_change_active_window_by_delta (Popup *popup, int delta, gboolean also_bring_active_window,
+  guint32 time, gboolean also_warp_pointer_if_necessary)
 {
   GList *window_list;
   GList *i;
@@ -37,7 +38,7 @@ action_change_active_window_by_delta (Popup *popup, int delta, gboolean also_bri
       } else {
         window = (SSWindow *) (g_list_last  (window_list))->data;
       }
-      wnck_window_activate (window->wnck_window, time);
+      ss_window_activate_window (window, time, also_warp_pointer_if_necessary);
     }
     return;
   }
@@ -66,7 +67,7 @@ action_change_active_window_by_delta (Popup *popup, int delta, gboolean also_bri
     window = (SSWindow *) i->data;
 
     if (should_activate_next_window) {
-      wnck_window_activate (window->wnck_window, time);
+      ss_window_activate_window (window, time, also_warp_pointer_if_necessary);
       return;
     }
 
@@ -74,7 +75,7 @@ action_change_active_window_by_delta (Popup *popup, int delta, gboolean also_bri
       if (delta == +1) {
         should_activate_next_window = TRUE;
       } else if (delta == -1) {
-        wnck_window_activate (previous_window->wnck_window, time);
+        ss_window_activate_window (previous_window, time, also_warp_pointer_if_necessary);
         return;
       } else {
         g_assert_not_reached ();
@@ -86,7 +87,7 @@ action_change_active_window_by_delta (Popup *popup, int delta, gboolean also_bri
 
   if (should_activate_next_window) {
     window = (SSWindow *) (g_list_first (window_list))->data;
-    wnck_window_activate (window->wnck_window, time);
+    ss_window_activate_window (window, time, also_warp_pointer_if_necessary);
   }
 }
 
@@ -495,12 +496,12 @@ on_scroll_event (GtkWidget *widget, GdkEventScroll *event, gpointer data)
   switch (event->direction) {
   case GDK_SCROLL_UP:
   case GDK_SCROLL_LEFT:
-    action_change_active_window_by_delta (popup, -1, shifted, event->time);
+    action_change_active_window_by_delta (popup, -1, shifted, event->time, FALSE);
     break;
 
   case GDK_SCROLL_DOWN:
   case GDK_SCROLL_RIGHT:
-    action_change_active_window_by_delta (popup, +1, shifted, event->time);
+    action_change_active_window_by_delta (popup, +1, shifted, event->time, FALSE);
     break;
 
   default:
@@ -786,10 +787,10 @@ popup_on_key_press (Popup *popup, Display *x_display, XKeyEvent *x_key_event)
     action_change_active_workspace_by_delta (popup, +1, shifted, ctrled, time);
   }
   else if ((keysym == XK_Up) || (keysym == XK_KP_Up)) {
-    action_change_active_window_by_delta (popup, -1, shifted, time);
+    action_change_active_window_by_delta (popup, -1, shifted, time, TRUE);
   }
   else if ((keysym == XK_Down) || (keysym == XK_KP_Down)) {
-    action_change_active_window_by_delta (popup, +1, shifted, time);
+    action_change_active_window_by_delta (popup, +1, shifted, time, TRUE);
   }
   else if ((keysym == XK_Page_Up) || (keysym == XK_KP_Page_Up)) {
     action_window_toggle_maximize (popup, ctrled, time);

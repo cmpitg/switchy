@@ -45,9 +45,11 @@ struct _SSScreen {
 
   SSDragAndDrop *   drag_and_drop;
 
-  int           label_max_width_chars;
+  int   label_max_width_chars;
 
   GtkTooltips *   tooltips;
+
+  gboolean   pointer_needs_recentering_on_focus_change;
 };
 
 typedef struct _SSScreenClass SSScreenClass;
@@ -56,7 +58,7 @@ struct _SSScreenClass {
 };
 
 GType        ss_screen_get_type   (void);
-SSScreen *   ss_screen_new        (WnckScreen *wnck_screen, Display *x_display);
+SSScreen *   ss_screen_new        (WnckScreen *wnck_screen, Display *x_display, Window x_root_window);
 
 SSWorkspace *   ss_screen_get_nth_workspace   (SSScreen *screen, int n);
 

@@ -16,6 +16,7 @@
 //------------------------------------------------------------------------------
 
 static Display *x_display = NULL;
+static Window x_root_window = None;
 static SSScreen *screen = NULL;
 static Popup *popup = NULL;
 static int popup_keycode_to_free = -1;
@@ -55,12 +56,12 @@ filter_func (GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
 //------------------------------------------------------------------------------
 
 static void
-grab (Display *x_display, GdkWindow *gdk_window, int keyval)
+grab (int keyval)
 {
   XGrabKey (x_display,
             XKeysymToKeycode (x_display, keyval),
             AnyModifier,
-            GDK_WINDOW_XWINDOW (gdk_window),
+            x_root_window,
             False,
             GrabModeAsync,
             GrabModeAsync);
@@ -77,12 +78,13 @@ main (int argc, char **argv)
 
   root = gdk_get_default_root_window ();
   x_display = GDK_WINDOW_XDISPLAY (root);
+  x_root_window = GDK_WINDOW_XWINDOW (root);
 
   gdk_window_add_filter (root, filter_func, NULL);
-  grab (x_display, root, XK_Super_L);
-  grab (x_display, root, XK_Super_R);
+  grab (XK_Super_L);
+  grab (XK_Super_R);
 
-  screen = ss_screen_new (wnck_screen_get_default (), x_display);
+  screen = ss_screen_new (wnck_screen_get_default (), x_display, x_root_window);
 
 printf ("-------\nSuperSwitcher version 0.4\n"); // TODO: DELETE ME
   gtk_main ();

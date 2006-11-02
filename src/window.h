@@ -31,7 +31,8 @@ struct _SSWindow {
 SSWindow *   ss_window_new    (SSWorkspace *workspace, WnckWindow *wnck_window);
 void         ss_window_free   (SSWindow *window);
 
-void   ss_window_activate_workspace_and_window   (SSWindow *window, guint32 time);
+void   ss_window_activate_window                 (SSWindow *window, guint32 time, gboolean also_warp_pointer_if_necessary);
+void   ss_window_activate_workspace_and_window   (SSWindow *window, guint32 time, gboolean also_warp_pointer_if_necessary);
 void   ss_window_update_label_max_width_chars    (SSWindow *window);
 void   ss_window_set_selected                    (SSWindow *window, gboolean selected);
 void   ss_window_set_sensitive                   (SSWindow *window, gboolean sensitive);

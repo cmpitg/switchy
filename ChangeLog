@@ -1,3 +1,12 @@
+2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 8
+
+	* One more svn:ignore'd file.
+	* Now warps the pointer to the activated window's center, under
+	  focus-follows-mouse in metacity.  This fixes the behavior where window
+	  activation would be 'stolen' by whatever window was under where the
+	  pointer was at the time.
+
+
 2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 7
 
 	* Forgot to svn remove the file 'missing'.

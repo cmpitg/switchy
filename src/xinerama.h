@@ -17,12 +17,13 @@ struct _SSXineramaScreen {
 
 struct _SSXinerama {
   Display *            x_display;
+  Window               x_root_window;
   int                  num_screens;
   SSXineramaScreen *   screens;
   int                  minimum_width;
 };
 
-SSXinerama *   ss_xinerama_new   (Display *x_display);
+SSXinerama *   ss_xinerama_new   (Display *x_display, Window x_root_window);
 
 void   ss_xinerama_move_to_next_screen   (SSXinerama *xinerama, SSWindow *window);
 
