@@ -1,3 +1,14 @@
+2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 6
+
+	* svn remove'd some ignorable files from the repo.
+	  Yes, this is my first time with subversion.
+
+
+2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 5
+
+	* Added some more files to the svn:ignore property.
+
+
 2006-09-17  Nigel Tao  <nigeltao@gnome.org>  revision 4
 
 	* Now works when NumLock is on.  Fixes bug #1.
