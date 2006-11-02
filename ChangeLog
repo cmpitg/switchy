@@ -1,3 +1,8 @@
+2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 7
+
+	* Forgot to svn remove the file 'missing'.
+
+
 2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 6
 
 	* svn remove'd some ignorable files from the repo.
