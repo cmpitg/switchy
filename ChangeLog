@@ -1,3 +1,10 @@
+2006-11-27  Nigel Tao  <nigeltao@gnome.org>  revision 9
+
+	* Now does window-frame geometry calculations "the right way", via a
+	  window's _NET_FRAME_EXTENTS X property, rather than presuming that its
+	  frame is the same as its parent X window.
+
+
 2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 8
 
 	* One more svn:ignore'd file.

@@ -69,20 +69,8 @@ ss_xinerama_new (Display *x_display, Window x_root_window)
   xinerama->num_screens = num_screens;
   xinerama->screens = screens;
   xinerama->minimum_width = minimum_width;
+  xinerama->net_frame_extents_atom = XInternAtom (x_display, "_NET_FRAME_EXTENTS", True);
   return xinerama;
-}
-
-//------------------------------------------------------------------------------
-
-static Window get_x_parent_window (Display *x_display, Window x_window)
-{
-  Window root, parent;
-  Window *children;
-  unsigned int num_children;
-
-  XQueryTree (x_display, x_window, &root, &parent, &children, &num_children);
-  XFree (children);
-  return parent;
 }
 
 //------------------------------------------------------------------------------
@@ -132,20 +120,86 @@ static int get_best_screen (SSXinerama *xinerama, SSWindow *window)
 
 //------------------------------------------------------------------------------
 
+void ss_xinerama_get_frame_extents (SSXinerama *xinerama, SSWindow *window,
+                                    int *out_x, int *out_y, int *out_width, int *out_height)
+{
+  Window x_window, x_root_window, an_ignored_window;
+  int x, y, x_wrt_root, y_wrt_root;
+  unsigned int width, height, border_width, depth;
+  int frame_left, frame_right, frame_top, frame_bottom;
+
+  // XGetWindowProperty stuff
+  Atom actual_type;
+  int actual_format;
+  unsigned long nitems;
+  unsigned long bytes_remaining;
+  unsigned char *data;
+  long *data_as_long;
+  int status;
+
+  if (xinerama == NULL || window == NULL) {
+    *out_x = *out_y = *out_width = *out_height = -1;
+    return;
+  }
+  frame_left = frame_right = frame_top = frame_bottom = 0;
+
+  // Get the window's co-ordinates...
+  x_window = wnck_window_get_xid (window->wnck_window);
+  XGetGeometry (xinerama->x_display, x_window, &x_root_window, &x, &y,
+                &width, &height, &border_width, &depth);
+
+  // ...with respect to (wrt) the root X Window...
+  XTranslateCoordinates (xinerama->x_display, x_window, x_root_window, 0, 0,
+                         &x_wrt_root, &y_wrt_root, &an_ignored_window);
+
+  // ...and adjust for the _NET_FRAME_EXTENTS, also known as the window border,
+  // including the titlebar and resize grippies.
+  status = XGetWindowProperty(
+    xinerama->x_display,
+    x_window,
+    xinerama->net_frame_extents_atom,
+    0,      // long_offset
+    4,      // long_length - we expect 4 32-bit values for _NET_FRAME_EXTENTS
+    False,  // delete
+    AnyPropertyType,
+    &actual_type,
+    &actual_format,
+    &nitems,
+    &bytes_remaining,
+    &data);
+
+  if (status == Success) {
+    if ((nitems == 4) && (bytes_remaining == 0)) {
+      // Hoop-jumping to avoid gcc's "dereferencing type-punned pointer" warning
+      data_as_long = (long *) ((void *) data);
+      frame_left   = (int) *(data_as_long++);
+      frame_right  = (int) *(data_as_long++);
+      frame_top    = (int) *(data_as_long++);
+      frame_bottom = (int) *(data_as_long++);
+    }
+    XFree (data);
+  }
+
+  *out_x = x_wrt_root - frame_left;
+  *out_y = y_wrt_root - frame_top;
+  *out_width  = (unsigned int) width  + frame_left + frame_right;
+  *out_height = (unsigned int) height + frame_top  + frame_bottom;
+}
+
+//------------------------------------------------------------------------------
+
 void ss_xinerama_move_to_next_screen (SSXinerama *xinerama, SSWindow *window)
 {
   int best_screen;
   SSXineramaScreen *xs;
   int dx, dy;
-  Window x_window, x_parent_window;
   gboolean is_maximized;
 
-  // Xlib callback junk
-  Window root;
-  int x, y;
-  unsigned int width, height, border_width, depth;
+  // Co-ordinates of a window's frame (as set by the window manager, such as
+  // metacity).
+  int fx, fy, fw, fh;
 
-  if (xinerama->num_screens == 1) {
+  if (xinerama->num_screens <= 1) {
     return;
   }
   if (window == NULL) {
@@ -153,31 +207,27 @@ void ss_xinerama_move_to_next_screen (SSXinerama *xinerama, SSWindow *window)
   }
 
   // In metacity, you can't move a maximized window with XMoveWindow.  Our
-  // gross hack is to temporarily unmaximize, move, and re-maximize.
+  // workaround is to temporarily unmaximize, move, and re-maximize.
   is_maximized = wnck_window_is_maximized (window->wnck_window);
   if (is_maximized) {
     wnck_window_unmaximize (window->wnck_window);
   }
 
+  // Get the window co-ordinates wrt the screen.
   best_screen = get_best_screen (xinerama, window);
-  // libwnck doesn't have a set_geometry function, nor does it give the
-  // geometry of the window manager's frame, so we do this with X calls.
-  x_window = wnck_window_get_xid (window->wnck_window);
-  x_parent_window = get_x_parent_window (xinerama->x_display, x_window);
-  XGetGeometry (xinerama->x_display, x_parent_window,
-    &root, &x, &y, &width, &height, &border_width, &depth);
-
-  // now move to the next screen.
   xs = &xinerama->screens[best_screen];
-  dx = x - xs->x;
-  dy = y - xs->y;
+  ss_xinerama_get_frame_extents (xinerama, window, &fx, &fy, &fw, &fh);
+  dx = fx - xs->x;
+  dy = fy - xs->y;
+
+  // Now move to the next screen.
   best_screen = (best_screen + 1) % xinerama->num_screens;
   xs = &xinerama->screens[best_screen];
-
-  // Yuck.  So, I move the window to the desired x,y of its PARENT window on
-  // the other (Xinerama) screen.  This seems unintuitive, but it's what works
+  // I move the window to the desired x,y of its *frame* window on the other
+  // (Xinerama) screen.  This is a little tricksy-ish, but it's what works
   // with metacity.  This may be totally broken on other window managers.
-  XMoveWindow (xinerama->x_display, x_window, xs->x + dx, xs->y + dy);
+  XMoveWindow (xinerama->x_display, wnck_window_get_xid (window->wnck_window),
+               xs->x + dx, xs->y + dy);
 
   if (is_maximized) {
     wnck_window_maximize (window->wnck_window);
