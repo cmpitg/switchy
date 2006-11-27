@@ -120,7 +120,7 @@ action_change_active_workspace (Popup *popup, int n, gboolean also_bring_active_
 //------------------------------------------------------------------------------
 
 static void
-action_new_workspace (Popup *popup, gboolean also_bring_active_window, guint32 time)
+action_new_workspace (Popup *popup, gboolean also_bring_active_window, gboolean all_not_just_current_window, guint32 time)
 {
   wnck_screen_change_workspace_count (popup->screen->wnck_screen,
     popup->screen->num_workspaces + 1);
@@ -131,6 +131,7 @@ action_new_workspace (Popup *popup, gboolean also_bring_active_window, guint32 t
   // the signal callback (on_workspace_created), not here.
   popup->owc_complete_action_new_workspace = TRUE;
   popup->owc_also_bring_active_window = also_bring_active_window;
+  popup->owc_all_not_just_current_window = all_not_just_current_window;
   popup->owc_time = time;
 }
 
@@ -455,21 +456,36 @@ on_window_closed (SSScreen *screen, SSWindow *window, gpointer data)
 static void
 on_workspace_created (SSScreen *screen, SSWorkspace *workspace, gpointer data)
 {
+  GList *i;
+  SSWindow *window;
   Popup *popup;
   popup = (Popup *) data;
 
-  // This part below is a hack - see action_new_workspace for the reason.
+  // This part below is a (possibly race-condition prone) hack - see
+  // action_new_workspace for the reason.
   if (popup->owc_complete_action_new_workspace) {
     if (popup->owc_also_bring_active_window) {
-      wnck_window_move_to_workspace (
-        wnck_screen_get_active_window (popup->screen->wnck_screen),
-        workspace->wnck_workspace);
-    }
+      if (popup->owc_all_not_just_current_window) {
+        for (i = screen->active_workspace->windows; i; i = i->next) {
+          window = (SSWindow *) i->data;
+          wnck_window_move_to_workspace (
+            window->wnck_window,
+            workspace->wnck_workspace);
+        }
+      } else {  // else if (popup->owc_all_not_just_current_window)
+        if (screen->active_window != NULL) {
+          wnck_window_move_to_workspace (
+            screen->active_window->wnck_window,
+            workspace->wnck_workspace);
+        }
+      }  // end if (popup->owc_all_not_just_current_window)
+    }  // end if (popup->owc_also_bring_active_window)
 
     wnck_workspace_activate (workspace->wnck_workspace, popup->owc_time);
 
     popup->owc_complete_action_new_workspace = FALSE;
     popup->owc_also_bring_active_window = FALSE;
+    popup->owc_all_not_just_current_window = FALSE;
     popup->owc_time = -1;
   }
 }
@@ -675,6 +691,7 @@ popup_create (SSScreen *screen)
 
   popup->owc_complete_action_new_workspace = FALSE;
   popup->owc_also_bring_active_window = FALSE;
+  popup->owc_all_not_just_current_window = FALSE;
   popup->owc_time = -1;
 
   popup->signal_id_active_window_changed =
@@ -799,7 +816,7 @@ popup_on_key_press (Popup *popup, Display *x_display, XKeyEvent *x_key_event)
     action_window_toggle_minimize (popup, ctrled, time);
   }
   else if ((keysym == XK_Insert) || (keysym == XK_KP_Insert)) {
-    action_new_workspace (popup, shifted, time);
+    action_new_workspace (popup, shifted, ctrled, time);
   }
   else if ((keysym == XK_Delete) || (keysym == XK_KP_Delete)) {
     // I forget whether it should be Super-Shift-Delete or Super-

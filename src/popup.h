@@ -32,6 +32,7 @@ struct _Popup
   // on_workspace_created hack
   gboolean   owc_complete_action_new_workspace;
   gboolean   owc_also_bring_active_window;
+  gboolean   owc_all_not_just_current_window;
   guint32    owc_time;
 };
 

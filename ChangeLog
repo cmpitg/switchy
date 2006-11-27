@@ -1,3 +1,10 @@
+2006-11-27  Nigel Tao  <nigeltao@gnome.org>  revision 10
+
+	* Super-Shift-Control-Insert now moves *all* windows from this workspace
+	  to a new workspace, so as to be consistent with Shift=Move, Control=
+	  Move-All-Windows-in-this-Workspace and Insert=New-Workspace.
+
+
 2006-11-27  Nigel Tao  <nigeltao@gnome.org>  revision 9
 
 	* Now does window-frame geometry calculations "the right way", via a
