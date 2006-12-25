@@ -15,11 +15,17 @@
 
 //------------------------------------------------------------------------------
 
+#define VERSION_STRING "0.4"
+
+//------------------------------------------------------------------------------
+
 static Display *x_display = NULL;
 static Window x_root_window = None;
 static SSScreen *screen = NULL;
 static Popup *popup = NULL;
 static int popup_keycode_to_free = -1;
+static gboolean trigger_on_caps_lock = FALSE;
+static gboolean show_version_and_exit = FALSE;
 
 //------------------------------------------------------------------------------
 
@@ -69,12 +75,65 @@ grab (int keyval)
 
 //------------------------------------------------------------------------------
 
+static void
+disable_caps_lock_default_behavior ()
+{
+  KeyCode keycode;
+  XModifierKeymap *map;
+	char *error_msg;
+
+  keycode = XKeysymToKeycode (x_display, XK_Caps_Lock);
+
+  map = XGetModifierMapping (x_display);
+  map = XDeleteModifiermapEntry (map, keycode, LockMapIndex);
+
+  error_msg = NULL;
+  switch (XSetModifierMapping (x_display, map)) {
+    case MappingSuccess:
+      break;
+    case MappingBusy:
+      error_msg = "since it's busy.";
+      break;
+    default:
+      error_msg = "for some unknown reason.";
+      break;
+  }
+  if (error_msg != NULL) {
+    fprintf (stderr,
+             "SuperSwitcher error - could not disable the Caps Lock key, %s\n",
+             error_msg);
+  }
+  XFreeModifiermap (map);
+}
+
+//------------------------------------------------------------------------------
+
 int
 main (int argc, char **argv)
 {
+  static const GOptionEntry options[] = {
+    { "trigger-on-caps-lock", 'c', 0, G_OPTION_ARG_NONE, &trigger_on_caps_lock,
+      "Make the Caps Lock key also switch windows", NULL },
+    { "version", 'v', 0, G_OPTION_ARG_NONE, &show_version_and_exit,
+      "Show the version number and exit", NULL },
+    { NULL }
+  };
+
   GdkWindow *root;
+  GOptionContext *context;
+  GError *error;
 
   gtk_init (&argc, &argv);
+
+  context = g_option_context_new ("");
+  error = NULL;
+  g_option_context_add_main_entries (context, options, NULL);
+  g_option_context_parse (context, &argc, &argv, &error);
+
+  if (show_version_and_exit) {
+    printf ("SuperSwitcher version %s\n", VERSION_STRING);
+    return 0;
+  }
 
   root = gdk_get_default_root_window ();
   x_display = GDK_WINDOW_XDISPLAY (root);
@@ -83,10 +142,13 @@ main (int argc, char **argv)
   gdk_window_add_filter (root, filter_func, NULL);
   grab (XK_Super_L);
   grab (XK_Super_R);
+  if (trigger_on_caps_lock) {
+    disable_caps_lock_default_behavior ();
+    grab (XK_Caps_Lock);
+  }
 
   screen = ss_screen_new (wnck_screen_get_default (), x_display, x_root_window);
 
-printf ("-------\nSuperSwitcher version 0.4\n"); // TODO: DELETE ME
   gtk_main ();
   return 0;
 }

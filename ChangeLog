@@ -1,3 +1,11 @@
+2006-12-25  Nigel Tao  <nigeltao@gnome.org>  revision 11
+
+	* New -c, -v and -? command line options.
+	  -c or --trigger-on-caps-lock makes the Caps Lock key also switch windows.
+	  -v or --version shows the version number and exits.
+	  -? or --help shows a brief instruction guide.
+
+
 2006-11-27  Nigel Tao  <nigeltao@gnome.org>  revision 10
 
 	* Super-Shift-Control-Insert now moves *all* windows from this workspace
