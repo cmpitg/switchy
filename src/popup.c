@@ -550,20 +550,20 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
   screen = popup->screen;
 
   dnd = screen->drag_and_drop;
-  if (dnd->is_dragging) {
-    if (dnd->drag_start_window != NULL && dnd->drag_workspace != NULL) {
-      // Some contortions just to get the theme color as 0-255 RGB.
-      colormap = gdk_colormap_get_system ();
-      gc = widget->style->text_gc[GTK_STATE_NORMAL];
-      gdk_gc_get_values (gc, &gc_values);
-      gdk_colormap_query_color (colormap, gc_values.foreground.pixel, &color);
-      rr = (255 * color.red)   / 65535;
-      gg = (255 * color.green) / 65535;
-      bb = (255 * color.blue)  / 65535;
+  if ((dnd->is_dragging) && (dnd->drag_workspace != NULL)) {
+    c = gdk_cairo_create (popup->window->window);
+    cairo_set_line_width (c, 2.0);
 
-      c = gdk_cairo_create (popup->window->window);
-      cairo_set_line_width (c, 2.0);
+    // Some contortions just to get the theme color as 0-255 RGB.
+    colormap = gdk_colormap_get_system ();
+    gc = widget->style->text_gc[GTK_STATE_NORMAL];
+    gdk_gc_get_values (gc, &gc_values);
+    gdk_colormap_query_color (colormap, gc_values.foreground.pixel, &color);
+    rr = (255 * color.red)   / 65535;
+    gg = (255 * color.green) / 65535;
+    bb = (255 * color.blue)  / 65535;
 
+    if (dnd->drag_start_window != NULL) {
       a = &(dnd->drag_start_window->widget->allocation);
       oldx0 = -3 + a->x;
       oldx1 = +3 + a->x + a->width;
@@ -586,23 +586,35 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
       }
       newy0 = -1 + y - oldhalfheight;
       newy1 = +1 + y + oldhalfheight;
+    } else {
+      a = &(dnd->drag_start_workspace->widget->allocation);
+      oldx0 = -4 + a->x;
+      oldx1 = +4 + a->x + a->width;
+      oldy0 = -2 + a->y;
+      oldy1 = +2 + a->y + a->height;
 
-      cairo_move_to (c, oldx0, oldy0);
-      cairo_line_to (c, oldx1, oldy0);
-      cairo_line_to (c, oldx1, oldy1);
-      cairo_line_to (c, oldx0, oldy1);
-      cairo_close_path (c);
-      cairo_set_source_rgba (c, rr, gg, bb, 0.25);
-      cairo_stroke (c);
-
-      cairo_move_to (c, newx0, newy0);
-      cairo_line_to (c, newx1, newy0);
-      cairo_line_to (c, newx1, newy1);
-      cairo_line_to (c, newx0, newy1);
-      cairo_close_path (c);
-      cairo_set_source_rgba (c, rr, gg, bb, 0.75);
-      cairo_stroke (c);
+      a = &(dnd->drag_workspace->widget->allocation);
+      newx0 = -4 + a->x;
+      newx1 = +4 + a->x + a->width;
+      newy0 = -2 + a->y;
+      newy1 = +2 + a->y + a->height;
     }
+
+    cairo_move_to (c, oldx0, oldy0);
+    cairo_line_to (c, oldx1, oldy0);
+    cairo_line_to (c, oldx1, oldy1);
+    cairo_line_to (c, oldx0, oldy1);
+    cairo_close_path (c);
+    cairo_set_source_rgba (c, rr, gg, bb, 0.25);
+    cairo_stroke (c);
+
+    cairo_move_to (c, newx0, newy0);
+    cairo_line_to (c, newx1, newy0);
+    cairo_line_to (c, newx1, newy1);
+    cairo_line_to (c, newx0, newy1);
+    cairo_close_path (c);
+    cairo_set_source_rgba (c, rr, gg, bb, 0.75);
+    cairo_stroke (c);
   }
 #endif
   return FALSE;

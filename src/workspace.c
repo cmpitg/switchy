@@ -5,6 +5,7 @@
 
 #include <X11/X.h>
 
+#include "draganddrop.h"
 #include "screen.h"
 #include "window.h"
 
@@ -137,17 +138,62 @@ static gboolean
 on_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   SSWorkspace *workspace;
+  workspace = (SSWorkspace *) data;
+  ss_draganddrop_start (workspace->screen->drag_and_drop, NULL, workspace);
+  return TRUE;
+}
+
+//------------------------------------------------------------------------------
+
+static gboolean
+on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+  SSWorkspace *workspace;
+  SSScreen *screen;
+  SSDragAndDrop *dnd;
   gboolean shifted;
   gboolean ctrled;
+  WnckWorkspace *dest_wnck_workspace;
+  GList *i;
+  SSWindow *window;
 
   workspace = (SSWorkspace *) data;
+  screen = workspace->screen;
+  dnd = screen->drag_and_drop;
+
   shifted = ((event->state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK);
   ctrled  = ((event->state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK);
 
-  ss_screen_change_active_workspace_to (workspace->screen,
-    ((SSWorkspace *) data)->wnck_workspace,
-    shifted, ctrled, event->time);
+  if (dnd->is_dragging) {
+    if (dnd->drag_workspace != NULL) {
+      dest_wnck_workspace = dnd->drag_workspace->wnck_workspace;
+      // This simple if clause is to avoid unnecessary work.
+      if (dnd->drag_workspace != workspace) {
+        for (i = workspace->windows; i; i = i->next) {
+          window = (SSWindow *) i->data;
+          wnck_window_move_to_workspace (
+            window->wnck_window,
+            dest_wnck_workspace);
+        }
+      }
+      wnck_workspace_activate (dest_wnck_workspace, event->time);
+    }
+  } else {
+    // It's a plain old click, not a drag.
+    ss_screen_change_active_workspace_to (workspace->screen,
+      workspace->wnck_workspace, shifted, ctrled, event->time);
+  }
 
+  ss_draganddrop_on_release (dnd);
+  return TRUE;
+}
+
+//------------------------------------------------------------------------------
+
+static gboolean
+on_motion_notify_event (GtkWidget *widget, GdkEventMotion *event, gpointer data)
+{
+  ss_draganddrop_on_motion (((SSWorkspace *) data)->screen->drag_and_drop);
   return TRUE;
 }
 
@@ -298,7 +344,11 @@ ss_workspace_new (SSScreen *screen, WnckWorkspace *wnck_workspace)
   gtk_container_add (GTK_CONTAINER (align), box);
 
   header = gtk_drawing_area_new ();
-  gtk_widget_add_events (header, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+  gtk_widget_add_events (header,
+                         GDK_BUTTON_PRESS_MASK |
+                         GDK_BUTTON_RELEASE_MASK |
+                         GDK_POINTER_MOTION_HINT_MASK |
+                         GDK_POINTER_MOTION_MASK);
   gtk_widget_set_size_request (header, MINI_WORKSPACE_WIDTH,
     MINI_WORKSPACE_WIDTH * screen->screen_aspect);
 
@@ -323,9 +373,14 @@ ss_workspace_new (SSScreen *screen, WnckWorkspace *wnck_workspace)
   g_signal_connect (G_OBJECT (header), "expose-event",
     (GCallback) on_expose_event,
     w);
-// TODO: button-release-event
   g_signal_connect (G_OBJECT (header), "button-press-event",
     (GCallback) on_button_press_event,
+    w);
+  g_signal_connect (G_OBJECT (header), "button-release-event",
+    (GCallback) on_button_release_event,
+    w);
+  g_signal_connect (G_OBJECT (header), "motion-notify-event",
+    (GCallback) on_motion_notify_event,
     w);
   g_signal_connect (G_OBJECT (header), "scroll-event",
     (GCallback) on_scroll_event,

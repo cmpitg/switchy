@@ -113,13 +113,10 @@ static gboolean
 on_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   SSWindow *window;
-  SSScreen *screen;
-  int x, y;
+  SSWorkspace *workspace;
   window = (SSWindow *) data;
-  screen = window->workspace->screen;
-  gdk_window_get_pointer (window->widget->window, &x, &y, NULL);
-
-  ss_draganddrop_start_from_window (screen->drag_and_drop, window, x, y);
+  workspace = window->workspace;
+  ss_draganddrop_start (workspace->screen->drag_and_drop, window, workspace);
   return TRUE;
 }
 
@@ -169,11 +166,12 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
       }
       ss_window_activate_window (window, event->time, FALSE);
     }
-    ss_draganddrop_on_release (dnd);
   } else {
+    // It's a plain old click, not a drag.
     window->new_window_index = -1;
     ss_window_activate_workspace_and_window (window, event->time, FALSE);
   }
+  ss_draganddrop_on_release (dnd);
   return TRUE;
 }
 
@@ -182,14 +180,7 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
 static gboolean
 on_motion_notify_event (GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
-  SSWindow *window;
-  SSScreen *screen;
-  int x, y;
-  window = (SSWindow *) data;
-  screen = window->workspace->screen;
-  gdk_window_get_pointer (window->widget->window, &x, &y, NULL);
-
-  ss_draganddrop_on_motion (screen->drag_and_drop, x, y);
+  ss_draganddrop_on_motion (((SSWindow *) data)->workspace->screen->drag_and_drop);
   return TRUE;
 }
 
