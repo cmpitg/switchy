@@ -1,3 +1,11 @@
+--------------------  2006-12-27  Version 0.4 released  --------------------
+
+2006-12-27  Nigel Tao  <nigeltao@gnome.org>  revision 13
+
+	* Added debian/* to aid in building .deb packages.
+	  Thanks to Drew Kerr for his help.
+
+
 2006-12-26  Nigel Tao  <nigeltao@gnome.org>  revision 12
 
 	* Can now drag-and-drop workspaces.

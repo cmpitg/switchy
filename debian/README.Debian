@@ -1,0 +1,12 @@
+superswitcher for Debian
+------------------------
+
+Note running instructions and caveats in README, especially:
+
+  SuperSwitcher is best enjoyed if you automatically start the program
+  whenever you log in.  To do this, from System -> Preferences -> Sessions,
+  go to the Startup Programs tab and add superswitcher.
+
+This might become automatic in a future version of the package.
+
+ -- Andrew Kerr <drewkerr@gmail.com>, Thu, 26 Oct 2006 09:46:17 +1000
