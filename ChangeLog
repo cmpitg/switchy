@@ -1,3 +1,8 @@
+2007-01-06  Nigel Tao  <nigeltao@gnome.org>  revision 14
+
+	* Reported version now given by configure.in.  (Don't Repeat Yourself).
+
+
 --------------------  2006-12-27  Version 0.4 released  --------------------
 
 2006-12-27  Nigel Tao  <nigeltao@gnome.org>  revision 13
