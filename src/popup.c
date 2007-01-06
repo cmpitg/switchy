@@ -122,6 +122,10 @@ action_change_active_workspace (Popup *popup, int n, gboolean also_bring_active_
 static void
 action_new_workspace (Popup *popup, gboolean also_bring_active_window, gboolean all_not_just_current_window, guint32 time)
 {
+  if (popup->screen->num_workspaces >= MAX_REASONABLE_WORKSPACES) {
+    return;
+  }
+
   wnck_screen_change_workspace_count (popup->screen->wnck_screen,
     popup->screen->num_workspaces + 1);
 

@@ -11,6 +11,7 @@ typedef struct _SSWorkspace      SSWorkspace;
 typedef struct _SSXinerama       SSXinerama;
 typedef struct _SSXineramaScreen SSXineramaScreen;
 
+#define MAX_REASONABLE_WORKSPACES  36
 #define WINDOW_ROW_SPACING         6
 #define WORKSPACE_COLUMN_SPACING   6
 
