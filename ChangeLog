@@ -1,81 +1,89 @@
+2007-01-06  Nigel Tao  <nigeltao@gnome.org>  revision 15
+
+  * --trigger-on-caps-lock split into --also-trigger... and --only-trigger...
+    This is a partial workaround to bug #4.
+    http://code.google.com/p/superswitcher/issues/detail?id=4
+  * ChangeLog changed from tabs to spaces.
+
+
 2007-01-06  Nigel Tao  <nigeltao@gnome.org>  revision 14
 
-	* Reported version now given by configure.in.  (Don't Repeat Yourself).
+  * Reported version now given by configure.in.  (Don't Repeat Yourself).
 
 
 --------------------  2006-12-27  Version 0.4 released  --------------------
 
 2006-12-27  Nigel Tao  <nigeltao@gnome.org>  revision 13
 
-	* Added debian/* to aid in building .deb packages.
-	  Thanks to Drew Kerr for his help.
+  * Added debian/* to aid in building .deb packages.
+    Thanks to Drew Kerr for his help.
 
 
 2006-12-26  Nigel Tao  <nigeltao@gnome.org>  revision 12
 
-	* Can now drag-and-drop workspaces.
+  * Can now drag-and-drop workspaces.
 
 
 2006-12-25  Nigel Tao  <nigeltao@gnome.org>  revision 11
 
-	* New -c, -v and -? command line options.
-	  -c or --trigger-on-caps-lock makes Caps Lock also switch windows.
-	  -v or --version shows the version number and exits.
-	  -? or --help shows a brief instruction guide.
+  * New -c, -v and -? command line options.
+    -c or --trigger-on-caps-lock makes Caps Lock also switch windows.
+    -v or --version shows the version number and exits.
+    -? or --help shows a brief instruction guide.
 
 
 2006-11-27  Nigel Tao  <nigeltao@gnome.org>  revision 10
 
-	* Super-Shift-Control-Insert now moves *all* windows from this workspace
-	  to a new workspace, so as to be consistent with Shift=Move, Control=
-	  Move-All-Windows-in-this-Workspace and Insert=New-Workspace.
+  * Super-Shift-Control-Insert now moves *all* windows from this workspace
+    to a new workspace, so as to be consistent with Shift=Move, Control=
+    Move-All-Windows-in-this-Workspace and Insert=New-Workspace.
 
 
 2006-11-27  Nigel Tao  <nigeltao@gnome.org>  revision 9
 
-	* Now does window-frame geometry calculations "the right way", via a
-	  window's _NET_FRAME_EXTENTS X property, rather than presuming that its
-	  frame is the same as its parent X window.
+  * Now does window-frame geometry calculations "the right way", via a
+    window's _NET_FRAME_EXTENTS X property, rather than presuming that its
+    frame is the same as its parent X window.
 
 
 2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 8
 
-	* One more svn:ignore'd file.
-	* Now warps the pointer to the activated window's center, under
-	  focus-follows-mouse in metacity.  This fixes the behavior where window
-	  activation would be 'stolen' by whatever window was under where the
-	  pointer was at the time.
+  * One more svn:ignore'd file.
+  * Now warps the pointer to the activated window's center, under
+    focus-follows-mouse in metacity.  This fixes the behavior where window
+    activation would be 'stolen' by whatever window was under where the
+    pointer was at the time.
 
 
 2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 7
 
-	* Forgot to svn remove the file 'missing'.
+  * Forgot to svn remove the file 'missing'.
 
 
 2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 6
 
-	* svn remove'd some ignorable files from the repo.
-	  Yes, this is my first time with subversion.
+  * svn remove'd some ignorable files from the repo.
+    Yes, this is my first time with subversion.
 
 
 2006-11-03  Nigel Tao  <nigeltao@gnome.org>  revision 5
 
-	* Added some more files to the svn:ignore property.
+  * Added some more files to the svn:ignore property.
 
 
 2006-09-17  Nigel Tao  <nigeltao@gnome.org>  revision 4
 
-	* Now works when NumLock is on.  Fixes bug #1.
-	  http://code.google.com/p/superswitcher/issues/detail?id=1
+  * Now works when NumLock is on.  Fixes bug #1.
+    http://code.google.com/p/superswitcher/issues/detail?id=1
 
-	* Version bump to 0.4.
+  * Version bump to 0.4.
 
 
 2006-09-17  Nigel Tao  <nigeltao@gnome.org>  revision 3
 
-	* Added svn:ignore properties.
-	* Some generated files seem to have changed after an ./autogen.sh
-	  refresh.
+  * Added svn:ignore properties.
+  * Some generated files seem to have changed after an ./autogen.sh
+    refresh.
 
 
 2006-09-17  Nigel Tao  <nigeltao@gnome.org> (note the new e-mail address)
@@ -92,20 +100,20 @@ The older ChangeLog remains below.
 
 2006-04-17  Nigel Tao  <nigel.tao@myrealbox.com>
 
-	* Can drag and drop windows between workspaces.
+  * Can drag and drop windows between workspaces.
 
-	* Shift-click and Shift-Control-click on a workspace's icon now works
-	  the same as Shift-Left/Right and Shift-Control-Left/Right (i.e., it
-	  moves one or all windows to a new workspace).
+  * Shift-click and Shift-Control-click on a workspace's icon now works
+    the same as Shift-Left/Right and Shift-Control-Left/Right (i.e., it
+    moves one or all windows to a new workspace).
 
-	* New tooltips show the window's full title.
+  * New tooltips show the window's full title.
 
-	* Basic Xinerama support.  Super-Super (yes, hit both buttons) to
-	  move a window from one screen to the next.
+  * Basic Xinerama support.  Super-Super (yes, hit both buttons) to
+    move a window from one screen to the next.
 
-	* Minor cosmetic changes.
+  * Minor cosmetic changes.
 
-	* Dependencies relaxed to gtk 2.6 and GNOME 2.10.
+  * Dependencies relaxed to gtk 2.6 and GNOME 2.10.
 
 
 
@@ -113,19 +121,19 @@ The older ChangeLog remains below.
 
 2006-01-22  Nigel Tao  <nigel.tao@myrealbox.com>
 
-	* Fixed crasher when opening "atypical" windows, such as clicking on the
-	  clock applet.
-	
-	* Active window is now highlighted a la menu items, rather than a plain
-	  ol' box.
-	
-	* Windows needing attention are in bold (consistent with the window list
-	  and window selector applets), and minimized windows are in italic.
-	
-	* Mouse scrolls now switch windows (and workspaces, if the mouse is over
-	  the mini-workspace column-header).
-	
-	* Super-Tab and Super-Enter now work when there is no window selected.
+  * Fixed crasher when opening "atypical" windows, such as clicking on the
+    clock applet.
+  
+  * Active window is now highlighted a la menu items, rather than a plain
+    ol' box.
+  
+  * Windows needing attention are in bold (consistent with the window list
+    and window selector applets), and minimized windows are in italic.
+  
+  * Mouse scrolls now switch windows (and workspaces, if the mouse is over
+    the mini-workspace column-header).
+  
+  * Super-Tab and Super-Enter now work when there is no window selected.
 
 
 
@@ -133,4 +141,4 @@ The older ChangeLog remains below.
 
 2006-01-01  Nigel Tao  <nigel.tao@myrealbox.com>
 
-	* Initial release.
+  * Initial release.

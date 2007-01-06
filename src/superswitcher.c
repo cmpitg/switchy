@@ -20,7 +20,8 @@ static Window x_root_window = None;
 static SSScreen *screen = NULL;
 static Popup *popup = NULL;
 static int popup_keycode_to_free = -1;
-static gboolean trigger_on_caps_lock = FALSE;
+static gboolean also_trigger_on_caps_lock = FALSE;
+static gboolean only_trigger_on_caps_lock = FALSE;
 static gboolean show_version_and_exit = FALSE;
 
 //------------------------------------------------------------------------------
@@ -108,8 +109,14 @@ int
 main (int argc, char **argv)
 {
   static const GOptionEntry options[] = {
-    { "trigger-on-caps-lock", 'c', 0, G_OPTION_ARG_NONE, &trigger_on_caps_lock,
-      "Make the Caps Lock key also switch windows", NULL },
+    { "also-trigger-on-caps-lock", 'c', 0, G_OPTION_ARG_NONE,
+      &also_trigger_on_caps_lock,
+      "Make the Caps Lock key also switch windows (as well as the Super key)",
+      NULL },
+    { "only-trigger-on-caps-lock", 'C', 0, G_OPTION_ARG_NONE,
+      &only_trigger_on_caps_lock,
+      "Make only the Caps Lock key switch windows (instead of the Super key)",
+      NULL },
     { "version", 'v', 0, G_OPTION_ARG_NONE, &show_version_and_exit,
       "Show the version number and exit", NULL },
     { NULL }
@@ -137,9 +144,11 @@ main (int argc, char **argv)
   x_root_window = GDK_WINDOW_XWINDOW (root);
 
   gdk_window_add_filter (root, filter_func, NULL);
-  grab (XK_Super_L);
-  grab (XK_Super_R);
-  if (trigger_on_caps_lock) {
+  if (!only_trigger_on_caps_lock) {
+    grab (XK_Super_L);
+    grab (XK_Super_R);
+  }
+  if (also_trigger_on_caps_lock || only_trigger_on_caps_lock) {
     disable_caps_lock_default_behavior ();
     grab (XK_Caps_Lock);
   }
