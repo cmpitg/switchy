@@ -623,25 +623,18 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
 #endif
   return FALSE;
 }
+
 //------------------------------------------------------------------------------
 
 static void
 search_widget_create (Popup *popup)
 {
-  GtkWidget *widget;
   GtkWidget *box;
-  GtkWidget *align;
   PangoAttribute *pa;
   PangoAttrList *pal;
 
-  widget = gtk_vbox_new (FALSE, 3);
-  gtk_box_pack_start (GTK_BOX (widget), gtk_hseparator_new (), FALSE, FALSE, 0);
-
-  align = gtk_alignment_new (0.5, 0.5, 0.0, 0.0);
-  gtk_box_pack_start (GTK_BOX (widget), align, TRUE, TRUE, 0);
-
   box = gtk_hbox_new (FALSE, WORKSPACE_COLUMN_SPACING);
-  gtk_container_add (GTK_CONTAINER (align), box);
+  gtk_container_add (GTK_CONTAINER (popup->search_container), box);
 
   gtk_box_pack_start (GTK_BOX (box), gtk_label_new ("Find:"), FALSE, FALSE, 0);
 
@@ -658,10 +651,103 @@ search_widget_create (Popup *popup)
   popup->search_num_matches_label = gtk_label_new (NULL);
   gtk_box_pack_start (GTK_BOX (box), popup->search_num_matches_label, FALSE, FALSE, 0);
 
-  gtk_box_pack_start (GTK_BOX (popup->box_to_add_search_widget), widget, FALSE, FALSE, 0);
-  gtk_widget_show_all (widget);
+  gtk_widget_show_all (box);
+}
 
-  popup->search_widget = widget;
+//------------------------------------------------------------------------------
+
+static GtkWidget *
+button_create (Popup *popup, const gchar *stock_id, GCallback callback, const gchar *tooltip)
+{
+  GtkWidget *button;
+  GtkWidget *image;
+
+  button = gtk_button_new ();
+  gtk_button_set_focus_on_click (GTK_BUTTON (button), FALSE);
+  gtk_button_set_relief (GTK_BUTTON (button), GTK_RELIEF_NONE);
+  image = gtk_image_new_from_stock (stock_id, GTK_ICON_SIZE_MENU);
+  gtk_container_add (GTK_CONTAINER (button), image);
+  gtk_tooltips_set_tip (GTK_TOOLTIPS (popup->screen->tooltips),
+    button, tooltip, "");
+  g_signal_connect (G_OBJECT (button), "clicked", callback, popup);
+
+  return button;
+}
+
+//------------------------------------------------------------------------------
+
+static void
+on_insert_button_clicked (GtkWidget *button, gpointer data)
+{
+  Popup *popup;
+  GdkEvent *current_event;
+  gboolean shifted;
+  gboolean ctrled;
+  guint32 time;
+
+  popup = (Popup *) data;
+  current_event = gtk_get_current_event ();
+  if (current_event) {
+    if (current_event->type == GDK_BUTTON_RELEASE) {
+      shifted = ((current_event->button.state & ShiftMask) == ShiftMask);
+      ctrled  = ((current_event->button.state & ControlMask) == ControlMask);
+      time = current_event->button.time;
+      action_new_workspace (popup, shifted, ctrled, time);
+    }
+    gdk_event_free (current_event);
+  }
+}
+
+//------------------------------------------------------------------------------
+
+static void
+on_delete_button_clicked (GtkWidget *button, gpointer data)
+{
+  Popup *popup;
+  GdkEvent *current_event;
+  gboolean shifted;
+  gboolean ctrled;
+  guint32 time;
+
+  popup = (Popup *) data;
+  current_event = gtk_get_current_event ();
+  if (current_event) {
+    if (current_event->type == GDK_BUTTON_RELEASE) {
+      shifted = ((current_event->button.state & ShiftMask) == ShiftMask);
+      ctrled  = ((current_event->button.state & ControlMask) == ControlMask);
+      time = current_event->button.time;
+      action_delete_workspace_if_empty (popup, shifted | ctrled, time);
+    }
+    gdk_event_free (current_event);
+  }
+}
+
+//------------------------------------------------------------------------------
+
+static void
+button_bar_create (Popup *popup, GtkWidget *parent_box)
+{
+  GtkWidget *inner_box;
+  GtkWidget *align;
+  GtkWidget *insert_button;
+  GtkWidget *delete_button;
+
+  inner_box = gtk_hbox_new (FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (parent_box), inner_box, FALSE, TRUE, 0);
+
+  insert_button = button_create (popup, GTK_STOCK_ADD,
+                                 G_CALLBACK (on_insert_button_clicked),
+                                 "Add a new workspace");
+  gtk_box_pack_start (GTK_BOX (inner_box), insert_button, FALSE, FALSE, 0);
+
+  delete_button = button_create (popup, GTK_STOCK_REMOVE,
+                                 G_CALLBACK (on_delete_button_clicked),
+                                 "Remove this workspace (if empty)");
+  gtk_box_pack_start (GTK_BOX (inner_box), delete_button, FALSE, FALSE, 0);
+
+  align = gtk_alignment_new (0.5, 0.5, 0.0, 0.0);
+  popup->search_container = align;
+  gtk_box_pack_start (GTK_BOX (inner_box), align, TRUE, TRUE, 0);
 }
 
 //------------------------------------------------------------------------------
@@ -701,7 +787,6 @@ popup_create (SSScreen *screen)
   popup = g_new (Popup, 1);
   popup->screen = screen;
 
-  popup->search_widget = NULL;
   popup->search_text_label = NULL;
   popup->search_num_matches_label = NULL;
 
@@ -745,8 +830,7 @@ popup_create (SSScreen *screen)
     (GCallback) on_expose_event,
     popup);
 
-  vbox = gtk_vbox_new (FALSE, 0);
-  popup->box_to_add_search_widget = vbox;
+  vbox = gtk_vbox_new (FALSE, 2);
 
   frame = gtk_frame_new (NULL);
   gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_OUT);
@@ -757,6 +841,9 @@ popup_create (SSScreen *screen)
   gtk_box_pack_start (GTK_BOX (vbox), align, TRUE, TRUE, 0);
   gtk_container_add (GTK_CONTAINER (align), screen->widget);
   popup->screen_container = align;
+
+  gtk_box_pack_start (GTK_BOX (vbox), gtk_hseparator_new (), FALSE, FALSE, 0);
+  button_bar_create (popup, vbox);
 
   gtk_widget_show_all (popup->window);
   return popup;

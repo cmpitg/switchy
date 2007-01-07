@@ -15,8 +15,10 @@ struct _Popup
 {
   SSScreen *    screen;
   GtkWidget *   window;
-  GtkWidget *   box_to_add_search_widget;
   GtkWidget *   screen_container;
+  GtkWidget *   search_container;
+  GtkWidget *   search_text_label;
+  GtkWidget *   search_num_matches_label;
 
   gulong   signal_id_active_window_changed;
   gulong   signal_id_active_workspace_changed;
@@ -24,10 +26,6 @@ struct _Popup
   gulong   signal_id_window_opened;
   gulong   signal_id_workspace_created;
   gulong   signal_id_workspace_destroyed;
-
-  GtkWidget *   search_widget;
-  GtkWidget *   search_text_label;
-  GtkWidget *   search_num_matches_label;
 
   // on_workspace_created hack
   gboolean   owc_complete_action_new_workspace;
