@@ -1,6 +1,6 @@
 # Initial blurb
 AC_PREREQ(2.52)
-AC_INIT(superswitcher, 0.4, http://code.google.com/p/superswitcher/)
+AC_INIT(superswitcher, 0.5, http://code.google.com/p/superswitcher/)
 AC_CONFIG_SRCDIR(src/superswitcher.c)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
