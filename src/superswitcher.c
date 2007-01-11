@@ -13,6 +13,10 @@
 #include "screen.h"
 #include "popup.h"
 
+#ifdef HAVE_DBUS_GLIB
+#include "dbus-object.h"
+#endif
+
 //------------------------------------------------------------------------------
 
 static Display *x_display = NULL;
@@ -34,7 +38,7 @@ filter_func (GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
 
   switch (x_event->type) {
   case KeyPress:
-    if (popup_keycode_to_free == -1) {
+    if (popup == NULL && popup_keycode_to_free == -1) {
       popup_keycode_to_free = x_event->xkey.keycode;
       popup = popup_create (screen);
     } else {
@@ -105,6 +109,41 @@ disable_caps_lock_default_behavior ()
 
 //------------------------------------------------------------------------------
 
+gboolean
+superswitcher_hide_popup (void *object, GError **error)
+{
+  if (popup) {
+    popup_free (popup);
+    popup = NULL;
+  }
+  return TRUE;
+}
+
+//------------------------------------------------------------------------------
+
+gboolean
+superswitcher_show_popup (void *object, GError **error)
+{
+  if (!popup) {
+    popup = popup_create (screen);
+  }
+  return TRUE;
+}
+
+//------------------------------------------------------------------------------
+
+gboolean
+superswitcher_toggle_popup (void *object, GError **error)
+{
+  if (popup) {
+    return superswitcher_hide_popup (object, error);
+  } else {
+    return superswitcher_show_popup (object, error);
+  }
+}
+
+//------------------------------------------------------------------------------
+
 int
 main (int argc, char **argv)
 {
@@ -138,6 +177,11 @@ main (int argc, char **argv)
     printf ("SuperSwitcher version %s\n", VERSION);
     return 0;
   }
+
+#ifdef HAVE_DBUS_GLIB
+  // Note that this may exit(...) if another instance is already running.
+  init_superswitcher_dbus ();
+#endif
 
   root = gdk_get_default_root_window ();
   x_display = GDK_WINDOW_XDISPLAY (root);

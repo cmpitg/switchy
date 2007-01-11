@@ -533,6 +533,20 @@ on_scroll_event (GtkWidget *widget, GdkEventScroll *event, gpointer data)
 //------------------------------------------------------------------------------
 
 static gboolean
+on_leave_notify_event (GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+  if (event->type == GDK_LEAVE_NOTIFY &&
+      event->crossing.detail != GDK_NOTIFY_INFERIOR) {
+    // TODO - hide the popup?  The line below crashes.  I should fix this.
+    // ss_dbus_hide_popup (NULL, NULL);
+  }
+
+  return TRUE;
+}
+
+//------------------------------------------------------------------------------
+
+static gboolean
 on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
 {
 #ifdef HAVE_GTK_2_8
@@ -822,9 +836,12 @@ popup_create (SSScreen *screen)
 
   popup->window = gtk_window_new (GTK_WINDOW_POPUP);
   gtk_window_set_position (GTK_WINDOW (popup->window), GTK_WIN_POS_CENTER_ALWAYS);
-  gtk_widget_add_events (popup->window, GDK_SCROLL_MASK);
+  gtk_widget_add_events (popup->window, GDK_SCROLL_MASK | GDK_LEAVE_NOTIFY_MASK);
   g_signal_connect (G_OBJECT (popup->window), "scroll-event",
     (GCallback) on_scroll_event,
+    popup);
+  g_signal_connect (G_OBJECT (popup->window), "leave-notify-event",
+    (GCallback) on_leave_notify_event,
     popup);
   g_signal_connect_after (G_OBJECT (popup->window), "expose-event",
     (GCallback) on_expose_event,

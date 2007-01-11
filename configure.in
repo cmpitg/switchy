@@ -63,6 +63,17 @@ else
 fi
 
 
+# D-Bus is similarly optional.
+if $PKG_CONFIG --exists dbus-glib-1; then
+  echo "Building with dbus-glib."
+  SUPERSWITCHER_CFLAGS="$SUPERSWITCHER_CFLAGS `$PKG_CONFIG --cflags dbus-glib-1`"
+  SUPERSWITCHER_LIBS="$SUPERSWITCHER_LIBS `$PKG_CONFIG --libs dbus-glib-1`"
+  AC_DEFINE(HAVE_DBUS_GLIB, , [If we have dbus-glib])
+else
+  echo "Building without dbus-glib."
+fi
+
+
 # We would like to work on gtk+ 2.6 and libwnck 2.10.  This will need some
 # conditional compilation (i.e., #ifdef directives).
 if $PKG_CONFIG --atleast-version 2.8 gtk+-2.0; then

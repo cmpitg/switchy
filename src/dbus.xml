@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node name="/superswitcher/SuperSwitcher">
+  <interface name="superswitcher.SuperSwitcher">
+    <method name="HidePopup">
+    </method>
+    <method name="ShowPopup">
+    </method>
+    <method name="TogglePopup">
+    </method>
+  </interface>
+</node>
