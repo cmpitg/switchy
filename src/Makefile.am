@@ -39,3 +39,7 @@ LDADD = ${SUPERSWITCHER_LIBS}
 # dbus-binding-tool --prefix=superswitcher --mode=glib-server dbus.xml > dbus-server-bindings.h
 # Really, it could be a Make rule, but for a one-off, we can live without the
 # dependency on dbus-binding-tool.
+
+
+DISTCLEANFILES = \
+	Makefile.in

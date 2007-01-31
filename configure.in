@@ -96,6 +96,7 @@ echo
 
 AC_OUTPUT([
   Makefile
-  src/Makefile
+  data/Makefile
   po/Makefile.in
+  src/Makefile
 ])
