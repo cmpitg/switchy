@@ -1,3 +1,8 @@
+2007-04-08  Nigel Tao  <nigeltao@gnome.org>  revision 22
+
+  * Plugged a memory leak.  Previously, we were not destroying cairo contexts.
+
+
 2007-02-22  Nigel Tao  <nigeltao@gnome.org>  revision 21
 
   * Added some test scripts.

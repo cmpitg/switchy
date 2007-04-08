@@ -633,6 +633,7 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
     cairo_close_path (c);
     cairo_set_source_rgba (c, rr, gg, bb, 0.75);
     cairo_stroke (c);
+    cairo_destroy (c);
   }
 #endif
   return FALSE;

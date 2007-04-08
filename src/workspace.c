@@ -221,6 +221,7 @@ on_expose_event_draw_text (GtkWidget *widget, SSWorkspace *workspace)
   cairo_set_source_rgba (c, 1, 1, 1, 0.25);
   cairo_move_to (c, x, y+1);
   cairo_show_text (c, workspace->title);
+  cairo_destroy (c);
 #endif
 }
 
