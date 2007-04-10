@@ -2,6 +2,7 @@
 // Licenced under the GNU General Public Licence (GPL) version 2.
 
 #include "dbus-object.h"
+#ifdef HAVE_DBUS_GLIB
 
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-bindings.h>
@@ -77,3 +78,6 @@ init_superswitcher_dbus (void)
 
   return TRUE;
 }
+
+#endif  // #ifdef HAVE_DBUS_GLIB
+

@@ -8,6 +8,8 @@
 
 #include "forward_declarations.h"
 
+#ifdef HAVE_DBUS_GLIB
 gboolean    init_superswitcher_dbus   (void);
+#endif
 
 #endif

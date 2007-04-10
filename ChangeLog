@@ -1,3 +1,8 @@
+2007-04-10  Nigel Tao  <nigeltao@gnome.org>  revision 23
+
+  * Now builds when configured without dbus-glib.
+
+
 2007-04-08  Nigel Tao  <nigeltao@gnome.org>  revision 22
 
   * Plugged a memory leak.  Previously, we were not destroying cairo contexts.
