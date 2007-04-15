@@ -1,3 +1,8 @@
+2007-04-16  Nigel Tao  <nigeltao@gnome.org>  revision 24
+
+  * Fixed "make distcheck" to include the D-Bus service file.
+
+
 2007-04-10  Nigel Tao  <nigeltao@gnome.org>  revision 23
 
   * Now builds when configured without dbus-glib.

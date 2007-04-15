@@ -7,6 +7,8 @@ service_DATA = $(service_in_files:.service.in=.service)
 $(service_DATA): $(service_in_files) Makefile
 	@sed -e "s|\@bindir\@|$(bindir)|" $< > $@
 
+EXTRA_DIST = \
+	$(service_in_files)
 
 DISTCLEANFILES = \
 	$(service_DATA) \
