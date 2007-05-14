@@ -1,3 +1,13 @@
+superswitcher (0.5) unstable; urgency=low
+
+  * Plugged a memory leak.  Previously, we were not destroying cairo contexts.
+  * First draft of a D-Bus interface.
+  * New add and remove workspace buttons.
+  * Respects #define MAX_REASONABLE_WORKSPACES 36 as per metacity.
+  * --trigger-on-caps-lock split into --also-trigger... and --only-trigger...
+
+ -- Nigel Tao <nigeltao@gnome.org>  Tue, 01 May 2007 12:00:00 +1100
+
 superswitcher (0.4) unstable; urgency=low
 
   * Initial release

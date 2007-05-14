@@ -1,3 +1,8 @@
+2007-05-14  Nigel Tao  <nigeltao@gnome.org>  revision 25
+
+  * Updated debian/* to new version (0.5).
+
+
 2007-04-16  Nigel Tao  <nigeltao@gnome.org>  revision 24
 
   * Fixed "make distcheck" to include the D-Bus service file.
