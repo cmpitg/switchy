@@ -28,6 +28,7 @@ SSXinerama *   ss_xinerama_new   (Display *x_display, Window x_root_window);
 
 void   ss_xinerama_move_to_next_screen   (SSXinerama *xinerama, SSWindow *window);
 void   ss_xinerama_get_frame_extents     (SSXinerama *xinerama, SSWindow *window,
-                                          int *out_x, int *out_y, int *out_width, int*out_height);
+                                          int *out_left, int *out_right,
+                                          int *out_top, int *out_bottom);
 
 #endif

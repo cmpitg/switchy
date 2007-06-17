@@ -16,11 +16,18 @@ typedef struct _SSXineramaScreen SSXineramaScreen;
 #define WORKSPACE_COLUMN_SPACING   6
 
 #define ABNORMAL_EXIT_CODE_ANOTHER_INSTANCE_IS_RUNNING  1
+#define ABNORMAL_EXIT_CODE_UNKNOWN_COMMAND_LINE_OPTION  2
 
 #include <glib/gerror.h>
 #include <glib/gtypes.h>
 gboolean   superswitcher_hide_popup     (void *, GError **);
 gboolean   superswitcher_show_popup     (void *, GError **);
 gboolean   superswitcher_toggle_popup   (void *, GError **);
+
+#ifdef HAVE_XCOMPOSITE
+extern gboolean show_window_thumbnails;
+typedef struct _SSThumbnailer SSThumbnailer;
+#endif
+
 
 #endif

@@ -1,6 +1,15 @@
+2007-06-17  Nigel Tao  <nigeltao@gnome.org>  revision 26
+
+  * First cut of window thumbnails (XComposite / XRender bling).
+  * Now exits on unknown command line arguments.
+
+
+--------------------  2007-05-01  Version 0.5 released  --------------------
+
 2007-05-14  Nigel Tao  <nigeltao@gnome.org>  revision 25
 
   * Updated debian/* to new version (0.5).
+    (Belated check-in).
 
 
 2007-04-16  Nigel Tao  <nigeltao@gnome.org>  revision 24

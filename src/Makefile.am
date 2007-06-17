@@ -13,6 +13,8 @@ superswitcher_SOURCES = \
   screen.c \
   screen.h \
   superswitcher.c \
+  thumbnailer.c \
+  thumbnailer.h \
   window.c \
   window.h \
   workspace.c \

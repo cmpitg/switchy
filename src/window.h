@@ -17,6 +17,10 @@ struct _SSWindow {
   GtkWidget *   image;
   GtkWidget *   label;
 
+#ifdef HAVE_XCOMPOSITE
+  SSThumbnailer *   thumbnailer;
+#endif
+
   gulong   signal_id_geometry_changed;
   gulong   signal_id_icon_changed;
   gulong   signal_id_name_changed;

@@ -8,6 +8,10 @@
 #include "workspace.h"
 #include "xinerama.h"
 
+#ifdef HAVE_XCOMPOSITE
+#include "thumbnailer.h"
+#endif
+
 //------------------------------------------------------------------------------
 
 void
@@ -298,6 +302,10 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
   GtkWidget *image;
   GtkWidget *label;
   GdkColor *color;
+#ifdef HAVE_XCOMPOSITE
+  SSThumbnailer *thumbnailer;
+#endif
+  w = g_new (SSWindow, 1);
 
   eventbox = gtk_event_box_new ();
   gtk_event_box_set_visible_window (GTK_EVENT_BOX (eventbox), FALSE);
@@ -307,8 +315,21 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
   hbox = gtk_hbox_new (FALSE, 3);
   gtk_container_add (GTK_CONTAINER (eventbox), hbox);
 
-  image = gtk_image_new ();
-  gtk_image_set_from_pixbuf (GTK_IMAGE(image), wnck_window_get_mini_icon (wnck_window));
+  if (show_window_thumbnails) {
+    // Really, all I need is any GtkWidget (so that I can have an allocation
+    // and set a preferred size) that doesn't have its own X window (so that
+    // it doesn't try to paint itself).
+    image = gtk_fixed_new ();
+#ifdef HAVE_XCOMPOSITE
+    thumbnailer = ss_thumbnailer_new (w, wnck_window, image);
+#endif
+  } else {
+    image = gtk_image_new ();
+    gtk_image_set_from_pixbuf (GTK_IMAGE(image), wnck_window_get_mini_icon (wnck_window));
+#ifdef HAVE_XCOMPOSITE
+    thumbnailer = NULL;
+#endif
+  }
   gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
 
   label = gtk_label_new (wnck_window_get_name (wnck_window));
@@ -320,19 +341,21 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
   color = & (gtk_widget_get_default_style ()->text[GTK_STATE_SELECTED]);
   gtk_widget_modify_fg (label, GTK_STATE_SELECTED, color);
 
-  w = g_new (SSWindow, 1);
   w->workspace = workspace;
   w->wnck_window = wnck_window;
   w->widget = eventbox;
   w->image = image;
   w->label = label;
+#ifdef HAVE_XCOMPOSITE
+  w->thumbnailer = thumbnailer;
+#endif
   w->sensitive = TRUE;
   w->new_window_index = -1;
   w->signal_id_geometry_changed =
     g_signal_connect (G_OBJECT (wnck_window), "geometry-changed",
     (GCallback) on_geometry_changed,
     w);
-  w->signal_id_icon_changed =
+  w->signal_id_icon_changed = show_window_thumbnails ? 0L :
     g_signal_connect (G_OBJECT (wnck_window), "icon-changed",
     (GCallback) on_icon_changed,
     w);
@@ -383,8 +406,10 @@ ss_window_free (SSWindow *window)
   }
   g_signal_handler_disconnect (G_OBJECT (window->wnck_window),
     window->signal_id_geometry_changed);
-  g_signal_handler_disconnect (G_OBJECT (window->wnck_window),
-    window->signal_id_icon_changed);
+  if (window->signal_id_icon_changed) {
+    g_signal_handler_disconnect (G_OBJECT (window->wnck_window),
+      window->signal_id_icon_changed);
+  }
   g_signal_handler_disconnect (G_OBJECT (window->wnck_window),
     window->signal_id_name_changed);
   g_signal_handler_disconnect (G_OBJECT (window->wnck_window),
@@ -392,5 +417,8 @@ ss_window_free (SSWindow *window)
   g_signal_handler_disconnect (G_OBJECT (window->wnck_window),
     window->signal_id_workspace_changed);
   g_object_unref (window->widget);
+#ifdef HAVE_XCOMPOSITE
+  ss_thumbnailer_free (window->thumbnailer);
+#endif
   g_free (window);
 }

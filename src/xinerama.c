@@ -75,7 +75,8 @@ ss_xinerama_new (Display *x_display, Window x_root_window)
 
 //------------------------------------------------------------------------------
 
-static int get_best_screen (SSXinerama *xinerama, SSWindow *window)
+static int
+get_best_screen (SSXinerama *xinerama, SSWindow *window)
 {
   GdkRectangle r;
   SSXineramaScreen *xs;
@@ -120,28 +121,19 @@ static int get_best_screen (SSXinerama *xinerama, SSWindow *window)
 
 //------------------------------------------------------------------------------
 
-void ss_xinerama_get_frame_extents (SSXinerama *xinerama, SSWindow *window,
-                                    int *out_x, int *out_y, int *out_width, int *out_height)
+static void
+ss_xinerama_get_frame_coordinates (SSXinerama *xinerama, SSWindow *window,
+                                   int *out_x, int *out_y, int *out_width, int *out_height)
 {
   Window x_window, x_root_window, an_ignored_window;
   int x, y, x_wrt_root, y_wrt_root;
   unsigned int width, height, border_width, depth;
   int frame_left, frame_right, frame_top, frame_bottom;
 
-  // XGetWindowProperty stuff
-  Atom actual_type;
-  int actual_format;
-  unsigned long nitems;
-  unsigned long bytes_remaining;
-  unsigned char *data;
-  long *data_as_long;
-  int status;
-
   if (xinerama == NULL || window == NULL) {
     *out_x = *out_y = *out_width = *out_height = -1;
     return;
   }
-  frame_left = frame_right = frame_top = frame_bottom = 0;
 
   // Get the window's co-ordinates...
   x_window = wnck_window_get_xid (window->wnck_window);
@@ -152,11 +144,41 @@ void ss_xinerama_get_frame_extents (SSXinerama *xinerama, SSWindow *window,
   XTranslateCoordinates (xinerama->x_display, x_window, x_root_window, 0, 0,
                          &x_wrt_root, &y_wrt_root, &an_ignored_window);
 
-  // ...and adjust for the _NET_FRAME_EXTENTS, also known as the window border,
-  // including the titlebar and resize grippies.
+  // ...and adjust for the _NET_FRAME_EXTENTS.
+  ss_xinerama_get_frame_extents (
+      xinerama, window, &frame_left, &frame_right, &frame_top, &frame_bottom);
+
+  *out_x = x_wrt_root - frame_left;
+  *out_y = y_wrt_root - frame_top;
+  *out_width  = (unsigned int) width  + frame_left + frame_right;
+  *out_height = (unsigned int) height + frame_top  + frame_bottom;
+}
+
+//------------------------------------------------------------------------------
+
+void
+ss_xinerama_get_frame_extents (SSXinerama *xinerama, SSWindow *window,
+                               int *out_left, int *out_right,
+                               int *out_top, int *out_bottom)
+{
+  // XGetWindowProperty stuff
+  Atom actual_type;
+  int actual_format;
+  unsigned long nitems;
+  unsigned long bytes_remaining;
+  unsigned char *data;
+  long *data_as_long;
+  int status;
+
+  if (xinerama == NULL || window == NULL) {
+    return;
+  }
+
+  // Find the _NET_FRAME_EXTENTS, also known as the window border, including
+  // the titlebar and resize grippies.
   status = XGetWindowProperty(
     xinerama->x_display,
-    x_window,
+    wnck_window_get_xid (window->wnck_window),
     xinerama->net_frame_extents_atom,
     0,      // long_offset
     4,      // long_length - we expect 4 32-bit values for _NET_FRAME_EXTENTS
@@ -168,27 +190,24 @@ void ss_xinerama_get_frame_extents (SSXinerama *xinerama, SSWindow *window,
     &bytes_remaining,
     &data);
 
+  *out_left = *out_right = *out_top = *out_bottom = 0;
   if (status == Success) {
     if ((nitems == 4) && (bytes_remaining == 0)) {
       // Hoop-jumping to avoid gcc's "dereferencing type-punned pointer" warning
       data_as_long = (long *) ((void *) data);
-      frame_left   = (int) *(data_as_long++);
-      frame_right  = (int) *(data_as_long++);
-      frame_top    = (int) *(data_as_long++);
-      frame_bottom = (int) *(data_as_long++);
+      *out_left   = (int) *(data_as_long++);
+      *out_right  = (int) *(data_as_long++);
+      *out_top    = (int) *(data_as_long++);
+      *out_bottom = (int) *(data_as_long++);
     }
     XFree (data);
   }
-
-  *out_x = x_wrt_root - frame_left;
-  *out_y = y_wrt_root - frame_top;
-  *out_width  = (unsigned int) width  + frame_left + frame_right;
-  *out_height = (unsigned int) height + frame_top  + frame_bottom;
 }
 
 //------------------------------------------------------------------------------
 
-void ss_xinerama_move_to_next_screen (SSXinerama *xinerama, SSWindow *window)
+void
+ss_xinerama_move_to_next_screen (SSXinerama *xinerama, SSWindow *window)
 {
   int best_screen;
   SSXineramaScreen *xs;
@@ -216,7 +235,7 @@ void ss_xinerama_move_to_next_screen (SSXinerama *xinerama, SSWindow *window)
   // Get the window co-ordinates wrt the screen.
   best_screen = get_best_screen (xinerama, window);
   xs = &xinerama->screens[best_screen];
-  ss_xinerama_get_frame_extents (xinerama, window, &fx, &fy, &fw, &fh);
+  ss_xinerama_get_frame_coordinates (xinerama, window, &fx, &fy, &fw, &fh);
   dx = fx - xs->x;
   dy = fy - xs->y;
 
