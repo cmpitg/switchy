@@ -92,7 +92,7 @@ if $PKG_CONFIG --atleast-version 2.8 gtk+-2.0; then
   AC_DEFINE(HAVE_GTK_2_8, , [If we have gtk+ 2.8])
   if $PKG_CONFIG --atleast-version 2.11 gtk+-2.0; then
     echo "Building with gtk+ >= 2.11."
-    AC_DEFINE(HAVE_GTK_2_11, , [If we have gtk+ 2.8])
+    AC_DEFINE(HAVE_GTK_2_11, , [If we have gtk+ 2.11])
   else
     echo "Building with gtk+ >= 2.8."
   fi
@@ -104,6 +104,12 @@ fi
 if $PKG_CONFIG --atleast-version 2.12 libwnck-1.0; then
   echo "Building with libwnck >= 2.12."
   AC_DEFINE(HAVE_WNCK_2_12, , [If we have libwnck 2.12])
+  if $PKG_CONFIG --atleast-version 2.19.3.1 libwnck-1.0; then
+    echo "Building with libwnck >= 2.19.3.1."
+    AC_DEFINE(HAVE_WNCK_2_19_3_1, , [If we have libwnck 2.19.3.1])
+  else
+    echo "Building without libwnck >= 2.12."
+  fi
 else
   echo "Building without libwnck >= 2.12."
 fi

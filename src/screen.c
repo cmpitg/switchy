@@ -571,7 +571,11 @@ update_window_label_width (SSScreen *screen)
 //------------------------------------------------------------------------------
 
 static void
+#ifdef HAVE_WNCK_2_19_3_1
+on_active_window_changed (WnckScreen *wnck_screen, WnckWindow *previous_window, gpointer data)
+#else
 on_active_window_changed (WnckScreen *wnck_screen, gpointer data)
+#endif
 {
   SSScreen *screen;
   screen = (SSScreen *) data;
@@ -582,7 +586,11 @@ on_active_window_changed (WnckScreen *wnck_screen, gpointer data)
 //------------------------------------------------------------------------------
 
 static void
+#ifdef HAVE_WNCK_2_19_3_1
+on_active_workspace_changed (WnckScreen *wnck_screen, WnckWorkspace *previous_workspace, gpointer data)
+#else
 on_active_workspace_changed (WnckScreen *wnck_screen, gpointer data)
+#endif
 {
   SSScreen *screen;
   screen = (SSScreen *) data;

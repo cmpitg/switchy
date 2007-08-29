@@ -1,6 +1,11 @@
+2007-08-29  Nigel Tao  <nigeltao@gnome.org>  revision 29
+
+  * Now builds on wnck 2.19 (new active_window_changed callback signature).
+
+
 2007-08-29  Nigel Tao  <nigeltao@gnome.org>  revision 28
 
-  * Now builds on gtk 2.11.
+  * Now builds on gtk 2.11 (new tooltips API).
 
 
 2007-08-25  Nigel Tao  <nigeltao@gnome.org>  revision 27
