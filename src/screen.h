@@ -47,7 +47,9 @@ struct _SSScreen {
 
   int   label_max_width_chars;
 
+#ifndef HAVE_GTK_2_11
   GtkTooltips *   tooltips;
+#endif
 
   gboolean   pointer_needs_recentering_on_focus_change;
 };

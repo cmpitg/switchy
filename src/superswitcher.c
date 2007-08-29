@@ -5,6 +5,7 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <X11/keysym.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>

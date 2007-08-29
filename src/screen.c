@@ -906,7 +906,9 @@ ss_screen_new (WnckScreen *wnck_screen, Display *x_display, Window x_root_window
   screen->label_max_width_chars = 256;
   update_window_label_width (screen);
 
+#ifndef HAVE_GTK_2_11
   screen->tooltips = gtk_tooltips_new ();
+#endif
 
   screen->pointer_needs_recentering_on_focus_change = FALSE;
 #ifdef HAVE_GCONF

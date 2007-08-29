@@ -219,8 +219,12 @@ on_name_changed (WnckWindow *wnck_window, gpointer data)
   window = (SSWindow *) data;
   gtk_label_set_text (GTK_LABEL (window->label),
     wnck_window_get_name (window->wnck_window));
+#ifdef HAVE_GTK_2_11
+  gtk_widget_set_tooltip_text (window->widget, wnck_window_get_name (wnck_window));
+#else
   gtk_tooltips_set_tip (GTK_TOOLTIPS (window->workspace->screen->tooltips),
     window->widget, wnck_window_get_name (wnck_window), "");
+#endif
   gtk_widget_queue_draw (gtk_widget_get_toplevel (window->widget));
 }
 
@@ -309,8 +313,12 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
 
   eventbox = gtk_event_box_new ();
   gtk_event_box_set_visible_window (GTK_EVENT_BOX (eventbox), FALSE);
+#ifdef HAVE_GTK_2_11
+  gtk_widget_set_tooltip_text (eventbox, wnck_window_get_name (wnck_window));
+#else
   gtk_tooltips_set_tip (GTK_TOOLTIPS (workspace->screen->tooltips),
     eventbox, wnck_window_get_name (wnck_window), "");
+#endif
 
   hbox = gtk_hbox_new (FALSE, 3);
   gtk_container_add (GTK_CONTAINER (eventbox), hbox);

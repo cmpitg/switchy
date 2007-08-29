@@ -1,4 +1,9 @@
-2007-08-253  Nigel Tao  <nigeltao@gnome.org>  revision 27
+2007-08-29  Nigel Tao  <nigeltao@gnome.org>  revision 28
+
+  * Now builds on gtk 2.11.
+
+
+2007-08-25  Nigel Tao  <nigeltao@gnome.org>  revision 27
 
   * Some more svn:ignore'd files.
 
