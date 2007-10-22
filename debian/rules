@@ -2,7 +2,7 @@
 # Sample debian/rules that uses cdbs.  Originaly written by Robert Millan.
 # This file is public domain.
   
-DEB_TAR_SRCDIR                  := superswitcher-0.5
+DEB_TAR_SRCDIR                  := superswitcher-0.6
 DEB_AUTO_CLEANUP_RCS            := yes
 
 # Add here any variable or target overrides you need

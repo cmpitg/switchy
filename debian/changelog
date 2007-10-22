@@ -1,3 +1,12 @@
+superswitcher (0.6) unstable; urgency=low
+
+  * Now builds on wnck 2.19 (new active_window_changed callback signature).
+  * Now builds on gtk 2.11 (new tooltips API).
+  * First cut of window thumbnails (XComposite / XRender bling).
+  * Now exits on unknown command line arguments.
+
+ -- Nigel Tao <nigeltao@gnome.org>  Mon, 22 Oct 2007 12:00:00 +1100
+
 superswitcher (0.5) unstable; urgency=low
 
   * Plugged a memory leak.  Previously, we were not destroying cairo contexts.

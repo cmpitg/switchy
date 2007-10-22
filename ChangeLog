@@ -1,3 +1,8 @@
+2007-10-22  Nigel Tao  <nigeltao@gnome.org>  revision 30
+
+  * Updated debian/* to new version (0.6).
+
+
 2007-08-29  Nigel Tao  <nigeltao@gnome.org>  revision 29
 
   * Now builds on wnck 2.19 (new active_window_changed callback signature).
