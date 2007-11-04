@@ -507,13 +507,18 @@ add_window_to_screen (SSScreen *screen, WnckWindow *wnck_window)
 {
   SSWindow *window;
   SSWorkspace *workspace;
+  WnckWorkspace *wnck_workspace;
   int n;
 
   if (wnck_window_is_skip_pager (wnck_window)) {
     return NULL;
   }
 
-  n = wnck_workspace_get_number (wnck_window_get_workspace (wnck_window));
+  wnck_workspace = wnck_window_get_workspace (wnck_window);
+  if (wnck_workspace == NULL) {
+    return NULL;
+  }
+  n = wnck_workspace_get_number (wnck_workspace);
   workspace = ss_screen_get_nth_workspace (screen, n);
 
   window = ss_window_new (workspace, wnck_window);
