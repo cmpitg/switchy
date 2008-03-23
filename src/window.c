@@ -323,21 +323,21 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
   hbox = gtk_hbox_new (FALSE, 3);
   gtk_container_add (GTK_CONTAINER (eventbox), hbox);
 
+#ifdef HAVE_XCOMPOSITE
   if (show_window_thumbnails) {
     // Really, all I need is any GtkWidget (so that I can have an allocation
     // and set a preferred size) that doesn't have its own X window (so that
     // it doesn't try to paint itself).
     image = gtk_fixed_new ();
-#ifdef HAVE_XCOMPOSITE
     thumbnailer = ss_thumbnailer_new (w, wnck_window, image);
-#endif
   } else {
+#endif
     image = gtk_image_new ();
     gtk_image_set_from_pixbuf (GTK_IMAGE(image), wnck_window_get_mini_icon (wnck_window));
 #ifdef HAVE_XCOMPOSITE
     thumbnailer = NULL;
-#endif
   }
+#endif
   gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
 
   label = gtk_label_new (wnck_window_get_name (wnck_window));
@@ -363,7 +363,10 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
     g_signal_connect (G_OBJECT (wnck_window), "geometry-changed",
     (GCallback) on_geometry_changed,
     w);
-  w->signal_id_icon_changed = show_window_thumbnails ? 0L :
+  w->signal_id_icon_changed =
+#ifdef HAVE_XCOMPOSITE
+    show_window_thumbnails ? 0L :
+#endif
     g_signal_connect (G_OBJECT (wnck_window), "icon-changed",
     (GCallback) on_icon_changed,
     w);

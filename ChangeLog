@@ -1,3 +1,10 @@
+2008-03-23  Nigel Tao  <nigeltao@gnome.org>  revision 32
+
+  * Fixed build error when xcomposite headers aren't present.
+    Thanks to ez4u2sai for the patch, attached to bug #19.
+    http://code.google.com/p/superswitcher/issues/detail?id=19
+
+
 2007-11-04  Nigel Tao  <nigeltao@gnome.org>  revision 31
 
   * Fixed crasher with windows belonging to no workspace (e.g. Tilda windows).
