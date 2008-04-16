@@ -10,6 +10,7 @@
 #include "forward_declarations.h"
 
 struct _SSWindow {
+  SSScreen *      screen;
   SSWorkspace *   workspace;
   WnckWindow *    wnck_window;
 

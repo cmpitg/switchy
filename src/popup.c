@@ -28,6 +28,10 @@ action_change_active_window_by_delta (Popup *popup, int delta, gboolean also_bri
   gboolean should_activate_next_window;
   int n, num_windows;
 
+  if (popup->screen->active_workspace == NULL) {
+    return;
+  }
+
   window_list = popup->screen->active_workspace->windows;
   aw = popup->screen->active_window;
   num_windows = g_list_length (window_list);
@@ -218,7 +222,8 @@ action_delete_workspace_if_empty (Popup *popup, gboolean all_not_just_current_wo
   } else {
     // Delete only the active workspace, and only if it is empty.
 
-    if (g_list_length (popup->screen->active_workspace->windows) == 0) {
+    if (popup->screen->active_workspace != NULL &&
+        g_list_length (popup->screen->active_workspace->windows) == 0) {
       active_workspace_has_been_seen = FALSE;
       wnck_workspace_to_move_to = NULL;
       for (i = workspaces; i; i = i->next) {
@@ -470,12 +475,14 @@ on_workspace_created (SSScreen *screen, SSWorkspace *workspace, gpointer data)
   if (popup->owc_complete_action_new_workspace) {
     if (popup->owc_also_bring_active_window) {
       if (popup->owc_all_not_just_current_window) {
-        for (i = screen->active_workspace->windows; i; i = i->next) {
-          window = (SSWindow *) i->data;
-          wnck_window_move_to_workspace (
-            window->wnck_window,
-            workspace->wnck_workspace);
-        }
+        if (screen->active_workspace != NULL) {
+          for (i = screen->active_workspace->windows; i; i = i->next) {
+            window = (SSWindow *) i->data;
+            wnck_window_move_to_workspace (
+              window->wnck_window,
+              workspace->wnck_workspace);
+          }
+        }  // end if (screen->active_workspace != NULL)
       } else {  // else if (popup->owc_all_not_just_current_window)
         if (screen->active_window != NULL) {
           wnck_window_move_to_workspace (

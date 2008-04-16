@@ -18,7 +18,7 @@ void
 ss_window_update_label_max_width_chars (SSWindow *window)
 {
   gtk_label_set_max_width_chars (GTK_LABEL (window->label),
-    window->workspace->screen->label_max_width_chars);
+    window->screen->label_max_width_chars);
 }
 
 //------------------------------------------------------------------------------
@@ -83,8 +83,9 @@ ss_window_activate_workspace_and_window (SSWindow *window, guint32 time,
   if (window == NULL) {
     return;
   }
-
-  wnck_workspace_activate (window->workspace->wnck_workspace, time);
+  if (window->workspace == NULL) {
+    wnck_workspace_activate (window->workspace->wnck_workspace, time);
+  }
   ss_window_activate_window (window, time + 1, also_warp_pointer_if_necessary);
 }
 
@@ -101,11 +102,11 @@ ss_window_activate_window (SSWindow *window, guint32 time,
 
   wnck_window_activate (window->wnck_window, time);
   if (also_warp_pointer_if_necessary &&
-      window->workspace->screen->pointer_needs_recentering_on_focus_change) {
+      window->screen->pointer_needs_recentering_on_focus_change) {
     wnck_window_get_geometry (window->wnck_window, &r.x, &r.y, &r.width, &r.height);
-    XWarpPointer (window->workspace->screen->xinerama->x_display,
+    XWarpPointer (window->screen->xinerama->x_display,
                   None,
-                  window->workspace->screen->xinerama->x_root_window,
+                  window->screen->xinerama->x_root_window,
                   0, 0, 0, 0, 
                   r.x + (r.width / 2), r.y + (r.height / 2));
   }
@@ -117,10 +118,8 @@ static gboolean
 on_button_press_event (GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   SSWindow *window;
-  SSWorkspace *workspace;
   window = (SSWindow *) data;
-  workspace = window->workspace;
-  ss_draganddrop_start (workspace->screen->drag_and_drop, window, workspace);
+  ss_draganddrop_start (window->screen->drag_and_drop, window, window->workspace);
   return TRUE;
 }
 
@@ -136,7 +135,7 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
   WnckWorkspace *wnck_workspace;
   window = (SSWindow *) data;
   wnck_window = window->wnck_window;
-  screen = window->workspace->screen;
+  screen = window->screen;
   dnd = screen->drag_and_drop;
 
   if (dnd->is_dragging) {
@@ -184,7 +183,7 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
 static gboolean
 on_motion_notify_event (GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
-  ss_draganddrop_on_motion (((SSWindow *) data)->workspace->screen->drag_and_drop);
+  ss_draganddrop_on_motion (((SSWindow *) data)->screen->drag_and_drop);
   return TRUE;
 }
 
@@ -216,14 +215,16 @@ static void
 on_name_changed (WnckWindow *wnck_window, gpointer data)
 {
   SSWindow *window;
+  const char *name;
   window = (SSWindow *) data;
-  gtk_label_set_text (GTK_LABEL (window->label),
-    wnck_window_get_name (window->wnck_window));
+  name = wnck_window_get_name (wnck_window);
+  gtk_label_set_text (GTK_LABEL (window->label), name);
 #ifdef HAVE_GTK_2_11
-  gtk_widget_set_tooltip_text (window->widget, wnck_window_get_name (wnck_window));
+  gtk_widget_set_tooltip_text (window->widget, name);
 #else
-  gtk_tooltips_set_tip (GTK_TOOLTIPS (window->workspace->screen->tooltips),
-    window->widget, wnck_window_get_name (wnck_window), "");
+  if (window->workspace) {
+    gtk_tooltips_set_tip (GTK_TOOLTIPS (window->screen->tooltips), window->widget, name, "");
+  }
 #endif
   gtk_widget_queue_draw (gtk_widget_get_toplevel (window->widget));
 }
@@ -257,16 +258,27 @@ on_workspace_changed (WnckWindow *wnck_window, gpointer data)
   SSWindow *window;
   SSWorkspace *old_workspace;
   SSWorkspace *new_workspace;
+  WnckWorkspace *new_wnck_workspace;
   int new_workspace_id;
 
   window = (SSWindow *) data;
   old_workspace = window->workspace;
-  new_workspace_id = wnck_workspace_get_number (wnck_window_get_workspace (wnck_window));
-  new_workspace = ss_screen_get_nth_workspace (old_workspace->screen, new_workspace_id);
+  new_wnck_workspace = wnck_window_get_workspace (wnck_window);
+  if (new_wnck_workspace) {
+    new_workspace_id = wnck_workspace_get_number (new_wnck_workspace);
+    new_workspace = ss_screen_get_nth_workspace (window->screen, new_workspace_id);
+  } else {
+    new_workspace_id = -1;
+    new_workspace = NULL;
+  }
 
-  ss_workspace_remove_window (old_workspace, window);
+  if (old_workspace) {
+    ss_workspace_remove_window (old_workspace, window);
+  }
   window->workspace = new_workspace;
-  ss_workspace_add_window (new_workspace, window);
+  if (new_workspace) {
+    ss_workspace_add_window (new_workspace, window);
+  }
   window->new_window_index = -1;
   gtk_widget_queue_draw (gtk_widget_get_toplevel (window->widget));
 }
@@ -279,7 +291,7 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
   SSWindow *window;
   window = (SSWindow *) data;
 
-  if (window == window->workspace->screen->active_window) {
+  if (window == window->screen->active_window) {
     gtk_paint_box (widget->style,
       widget->window,
       GTK_STATE_NORMAL,
@@ -316,7 +328,7 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
 #ifdef HAVE_GTK_2_11
   gtk_widget_set_tooltip_text (eventbox, wnck_window_get_name (wnck_window));
 #else
-  gtk_tooltips_set_tip (GTK_TOOLTIPS (workspace->screen->tooltips),
+  gtk_tooltips_set_tip (GTK_TOOLTIPS (window->screen->tooltips),
     eventbox, wnck_window_get_name (wnck_window), "");
 #endif
 
@@ -349,6 +361,7 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
   color = & (gtk_widget_get_default_style ()->text[GTK_STATE_SELECTED]);
   gtk_widget_modify_fg (label, GTK_STATE_SELECTED, color);
 
+  w->screen = workspace->screen;
   w->workspace = workspace;
   w->wnck_window = wnck_window;
   w->widget = eventbox;

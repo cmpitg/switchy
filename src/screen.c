@@ -57,11 +57,13 @@ ss_screen_change_active_workspace_to (SSScreen *screen, WnckWorkspace *wnck_work
 
   if (also_bring_active_window) {
     if (all_not_just_current_window) {
-      for (i = screen->active_workspace->windows; i; i = i->next) {
-        window = (SSWindow *) i->data;
-        wnck_window_move_to_workspace (
-          window->wnck_window,
-          wnck_workspace);
+      if (screen->active_workspace != NULL) {
+        for (i = screen->active_workspace->windows; i; i = i->next) {
+          window = (SSWindow *) i->data;
+          wnck_window_move_to_workspace (
+            window->wnck_window,
+            wnck_workspace);
+        }
       }
     } else {
       if (screen->active_window != NULL) {
@@ -84,7 +86,8 @@ ss_screen_change_active_workspace_by_delta (SSScreen *screen, int delta,
   WnckWorkspace *wnck_workspace;
   int w, n;
 
-  w = screen->active_workspace_id + delta;
+  w = screen->active_workspace_id == -1 ? 0 : screen->active_workspace_id;
+  w += delta;
   n = screen->num_workspaces;
 
   while (w < 0) {
@@ -330,6 +333,8 @@ ss_screen_activate_next_window_in_stacking_order (SSScreen *screen, gboolean bac
   WnckWindow *active_wnck_window;
   WnckWindow *wnck_window;
   gboolean ww_is_aww;
+  WnckWorkspace *active_wnck_workspace;
+  WnckWorkspace *wnck_workspace;
   int active_workspace_id;
   int workspace_id;
   GList *i;
@@ -367,7 +372,8 @@ ss_screen_activate_next_window_in_stacking_order (SSScreen *screen, gboolean bac
   } else {
     active_wnck_window = NULL;
   }
-  active_workspace_id = wnck_workspace_get_number (wnck_screen_get_active_workspace (screen->wnck_screen));
+  active_wnck_workspace = wnck_screen_get_active_workspace (screen->wnck_screen);
+  active_workspace_id = (active_wnck_workspace != NULL) ? wnck_workspace_get_number (active_wnck_workspace) : -1;
 
   // Note that wnck_windows_in_stacking_order is in bottom-to-top
   // order, so that if we're searching forwards (just like Alt-Tab)
@@ -375,7 +381,8 @@ ss_screen_activate_next_window_in_stacking_order (SSScreen *screen, gboolean bac
   // opposite ordering than in ss_screen_activate_next_window.
   for (i = screen->wnck_windows_in_stacking_order; i; i = i->next) {
     wnck_window = (WnckWindow *) i->data;
-    workspace_id = wnck_workspace_get_number (wnck_window_get_workspace (wnck_window));
+    wnck_workspace = wnck_window_get_workspace (wnck_window);
+    workspace_id = (wnck_workspace != NULL) ? wnck_workspace_get_number (wnck_workspace) : -1;
 
     if (workspace_id != active_workspace_id) {
       continue;
@@ -481,10 +488,16 @@ update_for_active_window (SSScreen *screen)
 static void
 update_for_active_workspace (SSScreen *screen)
 {
-  screen->active_workspace_id = wnck_workspace_get_number
-    (wnck_screen_get_active_workspace (screen->wnck_screen));
-  screen->active_workspace = ss_screen_get_nth_workspace
-    (screen, screen->active_workspace_id);
+  WnckWorkspace *wnck_workspace;
+  wnck_workspace = wnck_screen_get_active_workspace (screen->wnck_screen);
+  if (wnck_workspace) {
+    screen->active_workspace_id = wnck_workspace_get_number (wnck_workspace);
+    screen->active_workspace = ss_screen_get_nth_workspace
+      (screen, screen->active_workspace_id);
+  } else {
+    screen->active_workspace_id = -1;
+    screen->active_workspace = NULL;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -516,6 +529,7 @@ add_window_to_screen (SSScreen *screen, WnckWindow *wnck_window)
 
   wnck_workspace = wnck_window_get_workspace (wnck_window);
   if (wnck_workspace == NULL) {
+    // TODO - add it to the catch-all 'workspace' for e.g. those windows shown on all workspaces.
     return NULL;
   }
   n = wnck_workspace_get_number (wnck_workspace);
@@ -610,6 +624,7 @@ on_window_closed (WnckScreen *wnck_screen, WnckWindow *wnck_window, gpointer dat
 {
   SSScreen *screen;
   SSWindow *window;
+  WnckWorkspace *wnck_workspace;
   int n;
 
   screen = (SSScreen *) data;
@@ -617,8 +632,11 @@ on_window_closed (WnckScreen *wnck_screen, WnckWindow *wnck_window, gpointer dat
   if (window == NULL) {
     return;
   }
-  n = wnck_workspace_get_number (wnck_window_get_workspace (wnck_window));
-  ss_workspace_remove_window (ss_screen_get_nth_workspace (screen, n), window);
+  wnck_workspace = wnck_window_get_workspace (wnck_window);
+  if (wnck_workspace != NULL) {
+    n = wnck_workspace_get_number (wnck_workspace);
+    ss_workspace_remove_window (ss_screen_get_nth_workspace (screen, n), window);
+  }
 
   if (screen->active_window == window) {
     screen->active_window = NULL;

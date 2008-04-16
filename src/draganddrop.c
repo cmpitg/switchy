@@ -88,7 +88,7 @@ void
 ss_draganddrop_on_release (SSDragAndDrop *dnd)
 {
   if (dnd->is_dragging) {
-    if (dnd->drag_workspace != NULL) {
+    if (dnd->drag_workspace != NULL && dnd->drag_start_widget != NULL) {
       gtk_widget_queue_draw (gtk_widget_get_toplevel (dnd->drag_start_widget));
     }
   }
@@ -100,10 +100,23 @@ ss_draganddrop_on_release (SSDragAndDrop *dnd)
 void
 ss_draganddrop_start (SSDragAndDrop *dnd, SSWindow *window, SSWorkspace *workspace)
 {
+  GtkWidget *w;
+  if (window != NULL) {
+    w = window->widget;
+  } else if (workspace != NULL) {
+    w = workspace->widget;
+  } else {
+    w = NULL;
+  }
   dnd->drag_start_window = window;
   dnd->drag_start_workspace = workspace;
-  dnd->drag_start_widget = window ? window->widget : workspace->widget;
-  gdk_window_get_pointer (dnd->drag_start_widget->window,
-                          &(dnd->drag_start_x),
-                          &(dnd->drag_start_y), NULL);
+  dnd->drag_start_widget = w;
+  if (w != NULL) {
+    gdk_window_get_pointer (w->window,
+                            &(dnd->drag_start_x),
+                            &(dnd->drag_start_y), NULL);
+  } else {
+    dnd->drag_start_x = -1;
+    dnd->drag_start_y = -1;
+  }
 }
