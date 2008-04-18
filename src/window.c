@@ -328,7 +328,7 @@ ss_window_new (SSWorkspace *workspace, WnckWindow *wnck_window)
 #ifdef HAVE_GTK_2_11
   gtk_widget_set_tooltip_text (eventbox, wnck_window_get_name (wnck_window));
 #else
-  gtk_tooltips_set_tip (GTK_TOOLTIPS (window->screen->tooltips),
+  gtk_tooltips_set_tip (GTK_TOOLTIPS (workspace->screen->tooltips),
     eventbox, wnck_window_get_name (wnck_window), "");
 #endif
 

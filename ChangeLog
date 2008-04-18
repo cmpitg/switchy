@@ -1,3 +1,8 @@
+2008-04-18  Nigel Tao  <nigeltao@gnome.org>  revision 34
+
+  * Now builds (again) on gtk 2.8.
+
+
 2008-04-17  Nigel Tao  <nigeltao@gnome.org>  revision 33
 
   * More comprehensive fix for crasher with windows belonging to no workspace.
