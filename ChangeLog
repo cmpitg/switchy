@@ -1,3 +1,8 @@
+2008-04-23  Nigel Tao  <nigeltao@gnome.org>  revision 34
+
+  * Fix typo (missing ! operator) introduced in r33.
+
+
 2008-04-18  Nigel Tao  <nigeltao@gnome.org>  revision 34
 
   * Now builds (again) on gtk 2.8.

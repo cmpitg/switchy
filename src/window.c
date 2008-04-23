@@ -83,7 +83,7 @@ ss_window_activate_workspace_and_window (SSWindow *window, guint32 time,
   if (window == NULL) {
     return;
   }
-  if (window->workspace == NULL) {
+  if (window->workspace != NULL) {
     wnck_workspace_activate (window->workspace->wnck_workspace, time);
   }
   ss_window_activate_window (window, time + 1, also_warp_pointer_if_necessary);
