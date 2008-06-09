@@ -23,6 +23,11 @@
 
 //------------------------------------------------------------------------------
 
+// TODO - listen to window manager changes.
+gboolean window_manager_uses_viewports = FALSE;
+
+//------------------------------------------------------------------------------
+
 static Window x_root_window = None;
 static SSScreen *screen = NULL;
 static Popup *popup = NULL;

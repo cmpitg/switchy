@@ -153,7 +153,6 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
   SSDragAndDrop *dnd;
   gboolean shifted;
   gboolean ctrled;
-  WnckWorkspace *dest_wnck_workspace;
   GList *i;
   SSWindow *window;
 
@@ -166,22 +165,26 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
 
   if (dnd->is_dragging) {
     if (dnd->drag_workspace != NULL) {
-      dest_wnck_workspace = dnd->drag_workspace->wnck_workspace;
       // This simple if clause is to avoid unnecessary work.
       if (dnd->drag_workspace != workspace) {
         for (i = workspace->windows; i; i = i->next) {
+          // TODO - something weird is going on when dragging a workspace with
+          // multiple windows - only the first one is being moved. Perhaps we're
+          // modifying the list whilst iterating over it?
           window = (SSWindow *) i->data;
-          wnck_window_move_to_workspace (
-            window->wnck_window,
-            dest_wnck_workspace);
+          ss_window_move_to_workspace (window, dnd->drag_workspace);
         }
       }
-      wnck_workspace_activate (dest_wnck_workspace, event->time);
+      if (window_manager_uses_viewports) {
+        wnck_screen_move_viewport (screen->wnck_screen, screen->screen_width * dnd->drag_workspace->viewport, 0);
+      } else {
+        wnck_workspace_activate (dnd->drag_workspace->wnck_workspace, event->time);
+      }
     }
   } else {
     // It's a plain old click, not a drag.
     ss_screen_change_active_workspace_to (workspace->screen,
-      workspace->wnck_workspace, shifted, ctrled, event->time);
+      workspace->wnck_workspace, workspace->viewport, shifted, ctrled, event->time);
   }
 
   ss_draganddrop_on_release (dnd);
@@ -234,6 +237,7 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
   int screen_width, screen_height;
   double width_ratio, height_ratio;
   int x, y, w, h;
+  int viewport_x;
   GList *i;
   SSWindow *active_window;
   WnckWindow *wnck_window;
@@ -261,6 +265,11 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
   width_ratio  = (double) w / (double) screen_width;
   height_ratio = (double) h / (double) screen_height;
 
+  viewport_x = 0;
+  if (window_manager_uses_viewports) {
+    viewport_x = wnck_workspace_get_viewport_x (workspace->wnck_workspace);
+  }
+
   for (i = workspace->screen->wnck_windows_in_stacking_order; i; i = i->next) {
     wnck_window = (WnckWindow *) i->data;
     if (wnck_window_get_workspace (wnck_window) != workspace->wnck_workspace) {
@@ -276,6 +285,9 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
       state = GTK_STATE_SELECTED;
     }
     wnck_window_get_geometry (wnck_window, &r.x, &r.y, &r.width, &r.height);
+    if (window_manager_uses_viewports) {
+      r.x += viewport_x - (workspace->viewport * workspace->screen->screen_width);
+    }
 
     r.x = 0.5 + r.x * width_ratio;
     r.y = 0.5 + r.y * height_ratio;
@@ -330,7 +342,7 @@ ss_workspace_find_index_near_point (SSWorkspace *workspace, int x, int y)
 //------------------------------------------------------------------------------
 
 SSWorkspace *
-ss_workspace_new (SSScreen *screen, WnckWorkspace *wnck_workspace)
+ss_workspace_new (SSScreen *screen, WnckWorkspace *wnck_workspace, int viewport)
 {
   SSWorkspace *w;
   GtkWidget *box;
@@ -366,6 +378,7 @@ ss_workspace_new (SSScreen *screen, WnckWorkspace *wnck_workspace)
   w = g_new (SSWorkspace, 1);
   w->screen = screen;
   w->wnck_workspace = wnck_workspace;
+  w->viewport = viewport;
   w->widget = align;
   w->header = header;
   w->window_container = box_2;

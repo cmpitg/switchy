@@ -68,9 +68,11 @@ void   ss_screen_activate_next_window                     (SSScreen *screen, gbo
 void   ss_screen_activate_next_window_in_stacking_order   (SSScreen *screen, gboolean backwards, guint32 time);
 void   ss_screen_change_active_workspace                  (SSScreen *screen, int n, gboolean also_bring_active_window, gboolean all_not_just_current_window, guint32 time);
 void   ss_screen_change_active_workspace_by_delta         (SSScreen *screen, int delta, gboolean also_bring_active_window, gboolean all_not_just_current_window, guint32 time);
-void   ss_screen_change_active_workspace_to               (SSScreen *screen, WnckWorkspace *wnck_workspace, gboolean also_bring_active_window, gboolean all_not_just_current_window, guint32 time);
+void   ss_screen_change_active_workspace_to               (SSScreen *screen, WnckWorkspace *wnck_workspace, int viewport, gboolean also_bring_active_window, gboolean all_not_just_current_window, guint32 time);
 void   ss_screen_update_search                            (SSScreen *screen, const char *query);
 void   ss_screen_update_wnck_windows_in_stacking_order    (SSScreen *screen);
+
+SSWorkspace *   ss_screen_get_workspace_for_wnck_window   (SSScreen *screen, WnckWindow *wnck_window);
 
 SSWorkspace *   ss_screen_find_workspace_near_point   (SSScreen *screen, int x, int y);
 #endif

@@ -40,6 +40,86 @@ static guint gconf_focus_mode_notify_id = 0;
 
 //------------------------------------------------------------------------------
 
+static SSWindow *
+get_ss_window_from_wnck_window (SSScreen *screen, WnckWindow *wnck_window)
+{
+  gulong xid;
+  SSWorkspace *workspace;
+  SSWindow *window;
+  GList *i;
+  GList *j;
+
+  if (wnck_window == NULL) {
+    return NULL;
+  }
+
+  xid = wnck_window_get_xid (wnck_window);
+
+  // Walk through the list of list of windows, matching by X ID.
+  for (i = screen->workspaces; i; i = i->next) {
+    workspace = (SSWorkspace *) i->data;
+    for (j = workspace->windows; j; j = j->next) {
+      window = (SSWindow *) j->data;
+      if (xid == wnck_window_get_xid (window->wnck_window)) {
+        return window;
+      }
+    }
+  }
+
+  return NULL;
+}
+
+//------------------------------------------------------------------------------
+
+static SSWorkspace *
+get_ss_workspace_from_wnck_workspace (SSScreen *screen, WnckWorkspace *wnck_workspace, int viewport)
+{
+  SSWorkspace *workspace;
+  GList *i;
+
+  if (wnck_workspace == NULL) {
+    return NULL;
+  }
+
+  if (window_manager_uses_viewports) {
+    return (SSWorkspace *) g_list_nth_data (screen->workspaces, viewport);
+  }
+
+  for (i = screen->workspaces; i; i = i->next) {
+    workspace = (SSWorkspace *) i->data;
+    if (wnck_workspace == workspace->wnck_workspace) {
+      return workspace;
+    }
+  }
+
+  return NULL;
+}
+
+//------------------------------------------------------------------------------
+
+SSWorkspace *
+ss_screen_get_workspace_for_wnck_window (SSScreen *screen, WnckWindow *wnck_window)
+{
+  int x, y, w, h;
+  int vx;
+  int n;
+  if (window_manager_uses_viewports) {
+    wnck_window_get_geometry (wnck_window, &x, &y, &w, &h);
+    vx = wnck_workspace_get_viewport_x (wnck_window_get_workspace (wnck_window));
+    n = (vx + x + (w / 2)) / screen->screen_width;
+    if (n < 0) {
+      n = 0;
+    } else if (n >= screen->num_workspaces) {
+      n = screen->num_workspaces - 1;
+    }
+  } else {
+    n = wnck_workspace_get_number (wnck_window_get_workspace (wnck_window));
+  }
+  return ss_screen_get_nth_workspace (screen, n);
+}
+
+//------------------------------------------------------------------------------
+
 SSWorkspace *
 ss_screen_get_nth_workspace (SSScreen *screen, int n)
 {
@@ -49,32 +129,34 @@ ss_screen_get_nth_workspace (SSScreen *screen, int n)
 //------------------------------------------------------------------------------
 
 void
-ss_screen_change_active_workspace_to (SSScreen *screen, WnckWorkspace *wnck_workspace,
+ss_screen_change_active_workspace_to (SSScreen *screen, WnckWorkspace *wnck_workspace, int viewport,
   gboolean also_bring_active_window, gboolean all_not_just_current_window, guint32 time)
 {
   GList *i;
   SSWindow *window;
+  SSWorkspace *workspace;
 
   if (also_bring_active_window) {
+    workspace = get_ss_workspace_from_wnck_workspace (screen, wnck_workspace, viewport);
     if (all_not_just_current_window) {
       if (screen->active_workspace != NULL) {
         for (i = screen->active_workspace->windows; i; i = i->next) {
           window = (SSWindow *) i->data;
-          wnck_window_move_to_workspace (
-            window->wnck_window,
-            wnck_workspace);
+          ss_window_move_to_workspace (window, workspace);
         }
       }
     } else {
       if (screen->active_window != NULL) {
-        wnck_window_move_to_workspace (
-          screen->active_window->wnck_window,
-          wnck_workspace);
+        ss_window_move_to_workspace (screen->active_window, workspace);
       }
     }
   }
 
-  wnck_workspace_activate (wnck_workspace, time);
+  if (window_manager_uses_viewports) {
+    wnck_screen_move_viewport (screen->wnck_screen, screen->screen_width * viewport, 0);
+  } else {
+    wnck_workspace_activate (wnck_workspace, time);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -97,8 +179,8 @@ ss_screen_change_active_workspace_by_delta (SSScreen *screen, int delta,
     w -= n;
   }
 
-  wnck_workspace = wnck_screen_get_workspace (screen->wnck_screen, w);
-  ss_screen_change_active_workspace_to (screen, wnck_workspace,
+  wnck_workspace = wnck_screen_get_workspace (screen->wnck_screen, window_manager_uses_viewports ? 0 : w);
+  ss_screen_change_active_workspace_to (screen, wnck_workspace, window_manager_uses_viewports ? w : 0,
     also_bring_active_window, all_not_just_current_window, time);
 }
 
@@ -111,8 +193,8 @@ ss_screen_change_active_workspace (SSScreen *screen, int n, gboolean also_bring_
   WnckWorkspace *wnck_workspace;
 
   if ((n >= 0) && (n < screen->num_workspaces)) {
-    wnck_workspace = wnck_screen_get_workspace (screen->wnck_screen, n);
-    ss_screen_change_active_workspace_to (screen, wnck_workspace,
+    wnck_workspace = wnck_screen_get_workspace (screen->wnck_screen, window_manager_uses_viewports ? 0 : n);
+    ss_screen_change_active_workspace_to (screen, wnck_workspace, window_manager_uses_viewports ? n : 0,
       also_bring_active_window, all_not_just_current_window, time);
   }
 }
@@ -180,59 +262,6 @@ ss_screen_update_search (SSScreen *screen, const char *query)
 
   g_strfreev (terms);
   g_free (normalized_query);
-}
-
-//------------------------------------------------------------------------------
-
-static SSWindow *
-get_ss_window_from_wnck_window (SSScreen *screen, WnckWindow *wnck_window)
-{
-  gulong xid;
-  SSWorkspace *workspace;
-  SSWindow *window;
-  GList *i;
-  GList *j;
-
-  if (wnck_window == NULL) {
-    return NULL;
-  }
-
-  xid = wnck_window_get_xid (wnck_window);
-
-  // Walk through the list of list of windows, matching by X ID.
-  for (i = screen->workspaces; i; i = i->next) {
-    workspace = (SSWorkspace *) i->data;
-    for (j = workspace->windows; j; j = j->next) {
-      window = (SSWindow *) j->data;
-      if (xid == wnck_window_get_xid (window->wnck_window)) {
-        return window;
-      }
-    }
-  }
-
-  return NULL;
-}
-
-//------------------------------------------------------------------------------
-
-static SSWorkspace *
-get_ss_workspace_from_wnck_workspace (SSScreen *screen, WnckWorkspace *wnck_workspace)
-{
-  SSWorkspace *workspace;
-  GList *i;
-
-  if (wnck_workspace == NULL) {
-    return NULL;
-  }
-
-  for (i = screen->workspaces; i; i = i->next) {
-    workspace = (SSWorkspace *) i->data;
-    if (wnck_workspace == workspace->wnck_workspace) {
-      return workspace;
-    }
-  }
-
-  return NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -489,24 +518,32 @@ static void
 update_for_active_workspace (SSScreen *screen)
 {
   WnckWorkspace *wnck_workspace;
-  wnck_workspace = wnck_screen_get_active_workspace (screen->wnck_screen);
-  if (wnck_workspace) {
-    screen->active_workspace_id = wnck_workspace_get_number (wnck_workspace);
+
+  if (window_manager_uses_viewports) {
+    wnck_workspace = wnck_screen_get_workspace (screen->wnck_screen, 0);
+    screen->active_workspace_id = wnck_workspace_get_viewport_x (wnck_workspace) / screen->screen_width;
     screen->active_workspace = ss_screen_get_nth_workspace
       (screen, screen->active_workspace_id);
   } else {
-    screen->active_workspace_id = -1;
-    screen->active_workspace = NULL;
+    wnck_workspace = wnck_screen_get_active_workspace (screen->wnck_screen);
+    if (wnck_workspace) {
+      screen->active_workspace_id = wnck_workspace_get_number (wnck_workspace);
+      screen->active_workspace = ss_screen_get_nth_workspace
+        (screen, screen->active_workspace_id);
+    } else {
+      screen->active_workspace_id = -1;
+      screen->active_workspace = NULL;
+    }
   }
 }
 
 //------------------------------------------------------------------------------
 
 static SSWorkspace *
-add_workspace_to_screen (SSScreen *screen, WnckWorkspace *wnck_workspace)
+add_workspace_to_screen (SSScreen *screen, WnckWorkspace *wnck_workspace, int viewport)
 {
   SSWorkspace *workspace;
-  workspace = ss_workspace_new (screen, wnck_workspace);
+  workspace = ss_workspace_new (screen, wnck_workspace, viewport);
   screen->workspaces = g_list_append (screen->workspaces, workspace);
   gtk_box_pack_start (GTK_BOX (screen->widget),
     workspace->widget, FALSE, FALSE, 0);
@@ -521,7 +558,6 @@ add_window_to_screen (SSScreen *screen, WnckWindow *wnck_window)
   SSWindow *window;
   SSWorkspace *workspace;
   WnckWorkspace *wnck_workspace;
-  int n;
 
   if (wnck_window_is_skip_pager (wnck_window)) {
     return NULL;
@@ -532,9 +568,7 @@ add_window_to_screen (SSScreen *screen, WnckWindow *wnck_window)
     // TODO - add it to the catch-all 'workspace' for e.g. those windows shown on all workspaces.
     return NULL;
   }
-  n = wnck_workspace_get_number (wnck_workspace);
-  workspace = ss_screen_get_nth_workspace (screen, n);
-
+  workspace = ss_screen_get_workspace_for_wnck_window (screen, wnck_window);
   window = ss_window_new (workspace, wnck_window);
   if (wnck_window_is_active (wnck_window)) {
     if (screen->active_window != NULL) {
@@ -586,6 +620,34 @@ update_window_label_width (SSScreen *screen)
     }
   }
 }
+
+//------------------------------------------------------------------------------
+
+#ifdef HAVE_WNCK_2_19_3_1
+static void
+on_viewports_changed (WnckScreen *wnck_screen, gpointer data)
+{
+  SSScreen *screen;
+  SSWindow *window;
+  WnckWindow *wnck_window;
+  GList *i;
+  screen = (SSScreen *) data;
+  if (!window_manager_uses_viewports) {
+    return;
+  }
+  // TODO - don't segfault (via a bad widget) when the number of viewports change
+  update_for_active_workspace (screen);
+  for (i = wnck_screen_get_windows (screen->wnck_screen); i; i = i->next) {
+    wnck_window = (WnckWindow *) i->data;
+    window = get_ss_window_from_wnck_window (screen, wnck_window);
+    if (window) {
+      ss_window_update_for_new_workspace (
+        window, ss_screen_get_workspace_for_wnck_window (screen, wnck_window));
+    }
+  }
+  g_signal_emit (screen, active_workspace_changed_signal, 0, NULL);
+}
+#endif
 
 //------------------------------------------------------------------------------
 
@@ -738,7 +800,7 @@ on_workspace_created (WnckScreen *wnck_screen, WnckWorkspace *wnck_workspace, gp
 
   screen = (SSScreen *) data;
   screen->num_workspaces = wnck_screen_get_workspace_count (wnck_screen);
-  workspace = add_workspace_to_screen (screen, wnck_workspace);
+  workspace = add_workspace_to_screen (screen, wnck_workspace, 0);
   gtk_widget_show_all (workspace->widget);
 
   update_window_label_width (screen);
@@ -757,7 +819,7 @@ on_workspace_destroyed (WnckScreen *wnck_screen, WnckWorkspace *wnck_workspace, 
 
   screen = (SSScreen *) data;
   screen->num_workspaces -= 1;
-  workspace = get_ss_workspace_from_wnck_workspace (screen, wnck_workspace);
+  workspace = get_ss_workspace_from_wnck_workspace (screen, wnck_workspace, 0);
   screen->workspaces = g_list_remove (screen->workspaces, workspace);
 
   update_window_label_width (screen);
@@ -899,6 +961,27 @@ ss_screen_get_type (void)
 
 //------------------------------------------------------------------------------
 
+static gboolean
+does_window_manager_use_viewports (WnckScreen *wnck_screen)
+{
+  return 0 == g_ascii_strncasecmp (
+    wnck_screen_get_window_manager_name (wnck_screen), "compiz", 6);
+}
+
+//------------------------------------------------------------------------------
+
+static int
+get_viewport_count (WnckScreen *wnck_screen)
+{
+  int screen_width;
+  int workspace_width;
+  screen_width = wnck_screen_get_width (wnck_screen);
+  workspace_width = wnck_workspace_get_width (wnck_screen_get_workspace (wnck_screen, 0));
+  return workspace_width / screen_width;
+}
+
+//------------------------------------------------------------------------------
+
 SSScreen *
 ss_screen_new (WnckScreen *wnck_screen, Display *x_display, Window x_root_window)
 {
@@ -908,6 +991,7 @@ ss_screen_new (WnckScreen *wnck_screen, Display *x_display, Window x_root_window
   int i;
 
   wnck_screen_force_update (wnck_screen);
+  window_manager_uses_viewports = does_window_manager_use_viewports (wnck_screen);
 
   screen = (SSScreen *) g_object_new (SS_TYPE_SCREEN, NULL);
   screen->wnck_screen = wnck_screen;
@@ -920,7 +1004,9 @@ ss_screen_new (WnckScreen *wnck_screen, Display *x_display, Window x_root_window
   g_object_ref (screen->widget);
   gtk_container_set_border_width (GTK_CONTAINER (screen->widget), 6);
 
-  screen->num_workspaces = wnck_screen_get_workspace_count (wnck_screen);
+  screen->num_workspaces = window_manager_uses_viewports
+    ? get_viewport_count (wnck_screen)
+    : wnck_screen_get_workspace_count (wnck_screen);
 
   screen->active_window = NULL;
   screen->active_workspace = NULL;
@@ -949,7 +1035,11 @@ ss_screen_new (WnckScreen *wnck_screen, Display *x_display, Window x_root_window
   // Add existing workspaces, and then existing windows
   screen->workspaces = NULL;
   for (i = 0; i < screen->num_workspaces; i++) {
-    add_workspace_to_screen (screen, wnck_screen_get_workspace (wnck_screen, i));
+    if (window_manager_uses_viewports) {
+      add_workspace_to_screen (screen, wnck_screen_get_workspace (wnck_screen, 0), i);
+    } else {
+      add_workspace_to_screen (screen, wnck_screen_get_workspace (wnck_screen, i), 0);
+    }
   }
   update_workspace_titles (screen);
 
@@ -965,6 +1055,11 @@ ss_screen_new (WnckScreen *wnck_screen, Display *x_display, Window x_root_window
   g_signal_connect (G_OBJECT (wnck_screen), "active_workspace_changed",
     G_CALLBACK (on_active_workspace_changed),
     screen);
+#ifdef HAVE_WNCK_2_19_3_1
+  g_signal_connect (G_OBJECT (wnck_screen), "viewports_changed",
+    G_CALLBACK (on_viewports_changed),
+    screen);
+#endif
   g_signal_connect (G_OBJECT (wnck_screen), "window_closed",
     G_CALLBACK (on_window_closed),
     screen);

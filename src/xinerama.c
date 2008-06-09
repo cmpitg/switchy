@@ -171,6 +171,10 @@ ss_xinerama_get_frame_extents (SSXinerama *xinerama, SSWindow *window,
   int status;
 
   if (xinerama == NULL || window == NULL) {
+    *out_left   = 0;
+    *out_right  = 0;
+    *out_top    = 0;
+    *out_bottom = 0;
     return;
   }
 

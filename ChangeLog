@@ -1,4 +1,10 @@
-2008-04-23  Nigel Tao  <nigeltao@gnome.org>  revision 34
+2008-06-10  Nigel Tao  <nigeltao@gnome.org>  revision 36
+
+  * Improved (but imperfect) compiz support.  Specifically, we start to cater
+    for the "one workspace, multiple viewports" window-manager model.
+
+
+2008-04-23  Nigel Tao  <nigeltao@gnome.org>  revision 35
 
   * Fix typo (missing ! operator) introduced in r33.
 

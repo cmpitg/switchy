@@ -130,6 +130,7 @@ action_new_workspace (Popup *popup, gboolean also_bring_active_window, gboolean 
     return;
   }
 
+  // TODO - be compiz-aware
   wnck_screen_change_workspace_count (popup->screen->wnck_screen,
     popup->screen->num_workspaces + 1);
 
@@ -247,6 +248,8 @@ action_delete_workspace_if_empty (Popup *popup, gboolean all_not_just_current_wo
       num_workspaces_deleted++;
     }
   }
+
+  // TODO - fix the moves / activations when window_manager_uses_viewports
 
   // Second stage - do the actual moves.
   // 2a) move the windows.

@@ -123,6 +123,7 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
   gc = gdk_gc_new (thumbnailer->thumbnail_pixmap);
 
   ss_xinerama_get_frame_extents (
+      // TODO - should we cut out the ->workspace in the line below?
       window->workspace->screen->xinerama, window,
       &frame_left, &frame_right, &frame_top, &frame_bottom);
 

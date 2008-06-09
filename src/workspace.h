@@ -12,6 +12,7 @@
 struct _SSWorkspace {
   SSScreen *        screen;
   WnckWorkspace *   wnck_workspace;
+  int               viewport;
 
   GtkWidget *   widget;
   GtkWidget *   header;
@@ -21,7 +22,7 @@ struct _SSWorkspace {
   GList *   windows;
 };
 
-SSWorkspace *   ss_workspace_new    (SSScreen *screen, WnckWorkspace *wnck_workspace);
+SSWorkspace *   ss_workspace_new    (SSScreen *screen, WnckWorkspace *wnck_workspace, int viewport);
 void            ss_workspace_free   (SSWorkspace *workspace);
 
 void   ss_workspace_add_window       (SSWorkspace *workspace, SSWindow *window);

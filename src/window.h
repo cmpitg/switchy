@@ -38,8 +38,10 @@ void         ss_window_free   (SSWindow *window);
 
 void   ss_window_activate_window                 (SSWindow *window, guint32 time, gboolean also_warp_pointer_if_necessary);
 void   ss_window_activate_workspace_and_window   (SSWindow *window, guint32 time, gboolean also_warp_pointer_if_necessary);
-void   ss_window_update_label_max_width_chars    (SSWindow *window);
+void   ss_window_move_to_workspace               (SSWindow *window, SSWorkspace *workspace);
 void   ss_window_set_selected                    (SSWindow *window, gboolean selected);
 void   ss_window_set_sensitive                   (SSWindow *window, gboolean sensitive);
+void   ss_window_update_for_new_workspace        (SSWindow *window, SSWorkspace *new_workspace);
+void   ss_window_update_label_max_width_chars    (SSWindow *window);
 
 #endif

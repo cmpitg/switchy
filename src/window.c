@@ -84,7 +84,12 @@ ss_window_activate_workspace_and_window (SSWindow *window, guint32 time,
     return;
   }
   if (window->workspace != NULL) {
-    wnck_workspace_activate (window->workspace->wnck_workspace, time);
+    if (window_manager_uses_viewports) {
+      wnck_screen_move_viewport (
+        window->screen->wnck_screen, window->screen->screen_width * window->workspace->viewport, 0);
+    } else {
+      wnck_workspace_activate (window->workspace->wnck_workspace, time);
+    }
   }
   ss_window_activate_window (window, time + 1, also_warp_pointer_if_necessary);
 }
@@ -109,6 +114,55 @@ ss_window_activate_window (SSWindow *window, guint32 time,
                   window->screen->xinerama->x_root_window,
                   0, 0, 0, 0, 
                   r.x + (r.width / 2), r.y + (r.height / 2));
+  }
+}
+
+//------------------------------------------------------------------------------
+
+void
+ss_window_update_for_new_workspace (SSWindow *window, SSWorkspace *new_workspace)
+{
+  if (window->workspace == new_workspace) {
+    return;
+  }
+  if (window->workspace) {
+    ss_workspace_remove_window (window->workspace, window);
+  }
+  window->workspace = new_workspace;
+  if (new_workspace) {
+    ss_workspace_add_window (new_workspace, window);
+  }
+  window->new_window_index = -1;
+  gtk_widget_queue_draw (gtk_widget_get_toplevel (window->widget));
+}
+
+
+//------------------------------------------------------------------------------
+
+void
+ss_window_move_to_workspace (SSWindow *window, SSWorkspace *workspace)
+{
+  int old_x, old_y, old_w, old_h;
+  int frame_left, frame_right, frame_top, frame_bottom;
+  int workspace_delta;
+  int new_x;
+  if (window->workspace == workspace) {
+    return;
+  }
+  if (window->workspace == NULL) {
+    // TODO - implement move for a floating (??) workspace-less window.
+    return;
+  }
+  if (window_manager_uses_viewports) {
+    wnck_window_get_geometry (window->wnck_window, &old_x, &old_y, &old_w, &old_h);
+    workspace_delta = workspace->viewport - window->workspace->viewport;
+    ss_xinerama_get_frame_extents (window->screen->xinerama, window,
+      &frame_left, &frame_right, &frame_top, &frame_bottom);
+    new_x = old_x + (workspace_delta * window->screen->screen_width) - frame_left;
+    wnck_window_set_geometry (
+      window->wnck_window, WNCK_WINDOW_GRAVITY_CURRENT, WNCK_WINDOW_CHANGE_X, new_x, 0, 0, 0);
+  } else {
+    wnck_window_move_to_workspace (window->wnck_window, workspace->wnck_workspace);
   }
 }
 
@@ -141,10 +195,16 @@ on_button_release_event (GtkWidget *widget, GdkEventButton *event, gpointer data
   if (dnd->is_dragging) {
     if (dnd->drag_workspace != NULL) {
       wnck_workspace = dnd->drag_workspace->wnck_workspace;
-      wnck_workspace_activate (wnck_workspace, event->time);
+      if (!window_manager_uses_viewports) {
+        wnck_workspace_activate (wnck_workspace, event->time);
+      }
       if (dnd->drag_start_workspace != dnd->drag_workspace) {
         window->new_window_index = dnd->new_window_index;
-        wnck_window_move_to_workspace (wnck_window, wnck_workspace);
+        ss_window_move_to_workspace (window, dnd->drag_workspace);
+        if (window_manager_uses_viewports) {
+          wnck_screen_move_viewport (
+            screen->wnck_screen, screen->screen_width * dnd->drag_workspace->viewport, 0);
+        }
       } else {
         // Make an adjustment because moving a window
         // to directly after itself should be a no-op,
@@ -195,6 +255,10 @@ on_geometry_changed (WnckWindow *wnck_window, gpointer data)
   SSWindow *window;
   window = (SSWindow *) data;
   gtk_widget_queue_draw (gtk_widget_get_toplevel (window->widget));
+  if (window_manager_uses_viewports) {
+    ss_window_update_for_new_workspace (window,
+      ss_screen_get_workspace_for_wnck_window (window->screen, wnck_window));
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -271,16 +335,7 @@ on_workspace_changed (WnckWindow *wnck_window, gpointer data)
     new_workspace_id = -1;
     new_workspace = NULL;
   }
-
-  if (old_workspace) {
-    ss_workspace_remove_window (old_workspace, window);
-  }
-  window->workspace = new_workspace;
-  if (new_workspace) {
-    ss_workspace_add_window (new_workspace, window);
-  }
-  window->new_window_index = -1;
-  gtk_widget_queue_draw (gtk_widget_get_toplevel (window->widget));
+  ss_window_update_for_new_workspace (window, new_workspace);
 }
 
 //------------------------------------------------------------------------------

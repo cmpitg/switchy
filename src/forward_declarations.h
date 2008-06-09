@@ -29,5 +29,6 @@ extern gboolean show_window_thumbnails;
 typedef struct _SSThumbnailer SSThumbnailer;
 #endif
 
+extern gboolean window_manager_uses_viewports;
 
 #endif
