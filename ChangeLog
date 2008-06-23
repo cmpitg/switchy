@@ -1,3 +1,8 @@
+2008-06-24  Nigel Tao  <nigeltao@gnome.org>  revision 37
+
+  * Fixed crasher in update_search when wnck_window_get_name returns NULL.
+
+
 2008-06-10  Nigel Tao  <nigeltao@gnome.org>  revision 36
 
   * Improved (but imperfect) compiz support.  Specifically, we start to cater
@@ -30,6 +35,8 @@
 
   * Fixed crasher with windows belonging to no workspace (e.g. Tilda windows).
 
+
+--------------------  2007-10-22  Version 0.6 released  --------------------
 
 2007-10-22  Nigel Tao  <nigeltao@gnome.org>  revision 30
 

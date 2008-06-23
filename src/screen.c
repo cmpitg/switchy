@@ -209,30 +209,31 @@ update_search (SSScreen *screen, SSWindow *window, gchar** terms)
   gchar* term;
   int t;
 
-  matched = TRUE;
   title = (char *) wnck_window_get_name (window->wnck_window);
-  title = g_ascii_strdown (title, strlen (title));
-
-  t = 0;
-  while (terms[t] != NULL) {
-    term = terms[t];
-    t++;
-
-    if (strlen(term) == 0) {
-      continue;
+  if (title != NULL) {
+    matched = TRUE;
+    title = g_ascii_strdown (title, strlen (title));
+    t = 0;
+    while (terms[t] != NULL) {
+      term = terms[t];
+      t++;
+      if (strlen(term) == 0) {
+        continue;
+      }
+      if (g_strrstr (title, term) == NULL) {
+        matched = FALSE;
+        break;
+      }
     }
-    if (g_strrstr (title, term) == NULL) {
-      matched = FALSE;
-      break;
-    }
+    g_free (title);
+  } else {
+    matched = FALSE;
   }
 
   ss_window_set_sensitive (window, matched);
   if (matched) {
     screen->num_search_matches++;
   }
-
-  g_free (title);
 }
 
 //------------------------------------------------------------------------------
