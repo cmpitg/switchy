@@ -1,3 +1,8 @@
+2010-01-31  Nigel Tao  <nigeltao@gnome.org>  revision 38
+
+  * Fix typo in autogen.sh. This fixes issue issue 37.
+
+
 2008-06-24  Nigel Tao  <nigeltao@gnome.org>  revision 37
 
   * Fixed crasher in update_search when wnck_window_get_name returns NULL.
