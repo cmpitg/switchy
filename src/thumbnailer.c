@@ -28,33 +28,36 @@ gboolean show_window_thumbnails = FALSE;
 gboolean
 init_composite (void)
 {
+  Display *display;
+  display = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
+
   // First, check the Composite extension, then the Render extension.
   int error_base;
   int event_base;
   int version_major;
   int version_minor;
 
-  if (!XCompositeQueryExtension (gdk_display, &event_base, &error_base)) {
+  if (!XCompositeQueryExtension (display, &event_base, &error_base)) {
     return FALSE;
   }
 
   // We need at least version 0.2, for XCompositeNameWindowPixmap.
-  XCompositeQueryVersion (gdk_display, &version_major, &version_minor);
+  XCompositeQueryVersion (display, &version_major, &version_minor);
   if (version_major <= 0 && version_minor < 2) {
     return FALSE;
   }
 
-  if (!XRenderQueryExtension (gdk_display, &event_base, &error_base)) {
+  if (!XRenderQueryExtension (display, &event_base, &error_base)) {
     return FALSE;
   }
 
   // We need at least version 0.6, for XRenderSetPictureTransform.
-  XRenderQueryVersion (gdk_display, &version_major, &version_minor);
+  XRenderQueryVersion (display, &version_major, &version_minor);
   if (version_major <= 0 && version_minor < 6) {
     return FALSE;
   }
 
-  XCompositeRedirectSubwindows (gdk_display,
+  XCompositeRedirectSubwindows (display,
       GDK_WINDOW_XWINDOW (gdk_get_default_root_window ()),
       CompositeRedirectAutomatic);
   return TRUE;
@@ -65,7 +68,8 @@ init_composite (void)
 gboolean
 uninit_composite (void)
 {
-  XCompositeUnredirectSubwindows (gdk_display,
+  XCompositeUnredirectSubwindows (
+      GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
       GDK_WINDOW_XWINDOW (gdk_get_default_root_window ()),
       CompositeRedirectAutomatic);
   return TRUE;
@@ -78,25 +82,27 @@ uninit_composite (void)
 static void
 initialize_thumbnailer_pictures (SSThumbnailer *thumbnailer)
 {
+  Display *display;
   GdkScreen *screen;
   XRenderPictFormat *format;
   XRenderPictureAttributes pa;
 
+  display = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
   screen = gtk_widget_get_screen (thumbnailer->drawing_area);
-  format = XRenderFindVisualFormat (gdk_display, DefaultVisual (
-      gdk_display, gdk_screen_get_number (screen)));
+  format = XRenderFindVisualFormat (display, DefaultVisual (
+      display, gdk_screen_get_number (screen)));
 
   thumbnailer->thumbnail_pixmap = gdk_pixmap_new (
       thumbnailer->drawing_area->window, THUMBNAIL_SIZE, THUMBNAIL_SIZE, -1);
 
-  thumbnailer->thumbnail_picture = XRenderCreatePicture (gdk_display,
+  thumbnailer->thumbnail_picture = XRenderCreatePicture (display,
       GDK_DRAWABLE_XID (thumbnailer->thumbnail_pixmap), format, 0, NULL);
 
   pa.subwindow_mode = IncludeInferiors;
-  thumbnailer->window_picture = XRenderCreatePicture (gdk_display,
+  thumbnailer->window_picture = XRenderCreatePicture (display,
       wnck_window_get_xid (thumbnailer->wnck_window),
       format, CPSubwindowMode, &pa);
-  XRenderSetPictureFilter (gdk_display, thumbnailer->window_picture,
+  XRenderSetPictureFilter (display, thumbnailer->window_picture,
       "good", NULL, 0);
 }
 
@@ -147,12 +153,15 @@ on_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer data)
   transform.matrix[2][0] = XDoubleToFixed (0.0);
   transform.matrix[2][1] = XDoubleToFixed (0.0);
   transform.matrix[2][2] = XDoubleToFixed (1.0);
-  XRenderSetPictureTransform (gdk_display, thumbnailer->window_picture,
+  XRenderSetPictureTransform (
+      GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
+      thumbnailer->window_picture,
       &transform);
 
-  XRenderComposite (gdk_display, PictOpSrc,
-    thumbnailer->window_picture, None, thumbnailer->thumbnail_picture,
-    0, 0, 0, 0, 0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+  XRenderComposite (
+      GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
+      PictOpSrc, thumbnailer->window_picture, None, thumbnailer->thumbnail_picture,
+      0, 0, 0, 0, 0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
 
   offset_x = widget->allocation.x + (THUMBNAIL_SIZE - thumbnail_width) / 2;
   offset_y = widget->allocation.y + (THUMBNAIL_SIZE - thumbnail_height) / 2;
@@ -207,11 +216,15 @@ ss_thumbnailer_free (SSThumbnailer *thumbnailer)
     thumbnailer->thumbnail_pixmap = NULL;
   }
   if (thumbnailer->thumbnail_picture != None) {
-    XRenderFreePicture (gdk_display, thumbnailer->thumbnail_picture);
+    XRenderFreePicture (
+        GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
+        thumbnailer->thumbnail_picture);
     thumbnailer->thumbnail_picture = None;
   }
   if (thumbnailer->window_picture != None) {
-    XRenderFreePicture (gdk_display, thumbnailer->window_picture);
+    XRenderFreePicture (
+        GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
+        thumbnailer->window_picture);
     thumbnailer->window_picture = None;
   }
 
