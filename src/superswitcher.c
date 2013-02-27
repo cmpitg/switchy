@@ -75,9 +75,10 @@ grab (int keyval)
 {
   Display *display;
   display = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
+  // Mod4 is Super
   XGrabKey (display,
             XKeysymToKeycode (display, keyval),
-            AnyModifier,
+            Mod4Mask,
             x_root_window,
             False,
             GrabModeAsync,
@@ -173,8 +174,7 @@ main (int argc, char **argv)
   x_root_window = GDK_WINDOW_XWINDOW (root);
 
   gdk_window_add_filter (root, filter_func, NULL);
-  grab (XK_Super_L);
-  grab (XK_Super_R);
+  grab (XK_Tab);
 
   screen = ss_screen_new (wnck_screen_get_default (),
                           GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
