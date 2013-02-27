@@ -1,6 +1,9 @@
-Trigger with Super + Tab instead of just Super.
+* Shortcut to activate SuperSwitcher should be configurable.
 
-cmpitg
+* Behave like normal Super + Tab, i.e. popup only closes when all keys are
+  released.
+
+* When choosing windows/desktop, no transition is performed.
 
 ------------------------------------
 
