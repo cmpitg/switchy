@@ -32,8 +32,6 @@ static Window x_root_window = None;
 static SSScreen *screen = NULL;
 static Popup *popup = NULL;
 static int popup_keycode_to_free = -1;
-static gboolean also_trigger_on_caps_lock = FALSE;
-static gboolean only_trigger_on_caps_lock = FALSE;
 static gboolean show_version_and_exit = FALSE;
 
 //------------------------------------------------------------------------------
@@ -88,40 +86,6 @@ grab (int keyval)
 
 //------------------------------------------------------------------------------
 
-static void
-disable_caps_lock_default_behavior ()
-{
-  Display *display;
-  KeyCode keycode;
-  XModifierKeymap *map;
-  char *error_msg;
-
-  display = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
-  keycode = XKeysymToKeycode (display, XK_Caps_Lock);
-
-  map = XGetModifierMapping (display);
-  map = XDeleteModifiermapEntry (map, keycode, LockMapIndex);
-
-  error_msg = NULL;
-  switch (XSetModifierMapping (display, map)) {
-    case MappingSuccess:
-      break;
-    case MappingBusy:
-      error_msg = "since it's busy.";
-      break;
-    default:
-      error_msg = "for some unknown reason.";
-      break;
-  }
-  if (error_msg != NULL) {
-    g_printerr ("SuperSwitcher could not disable the Caps Lock key, %s\n",
-                error_msg);
-  }
-  XFreeModifiermap (map);
-}
-
-//------------------------------------------------------------------------------
-
 gboolean
 superswitcher_hide_popup (void *object, GError **error)
 {
@@ -161,14 +125,6 @@ int
 main (int argc, char **argv)
 {
   static const GOptionEntry options[] = {
-    { "also-trigger-on-caps-lock", 'c', 0, G_OPTION_ARG_NONE,
-      &also_trigger_on_caps_lock,
-      "Make the Caps Lock key also switch windows (as well as the Super key)",
-      NULL },
-    { "only-trigger-on-caps-lock", 'C', 0, G_OPTION_ARG_NONE,
-      &only_trigger_on_caps_lock,
-      "Make only the Caps Lock key switch windows (instead of the Super key)",
-      NULL },
     { "version", 'v', 0, G_OPTION_ARG_NONE, &show_version_and_exit,
       "Show the version number and exit", NULL },
 #ifdef HAVE_XCOMPOSITE
@@ -217,14 +173,8 @@ main (int argc, char **argv)
   x_root_window = GDK_WINDOW_XWINDOW (root);
 
   gdk_window_add_filter (root, filter_func, NULL);
-  if (!only_trigger_on_caps_lock) {
-    grab (XK_Super_L);
-    grab (XK_Super_R);
-  }
-  if (also_trigger_on_caps_lock || only_trigger_on_caps_lock) {
-    disable_caps_lock_default_behavior ();
-    grab (XK_Caps_Lock);
-  }
+  grab (XK_Super_L);
+  grab (XK_Super_R);
 
   screen = ss_screen_new (wnck_screen_get_default (),
                           GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
